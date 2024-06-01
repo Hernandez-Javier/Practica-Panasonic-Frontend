@@ -1,0 +1,55 @@
+/* Estilos para el contenedor principal */
+.login-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+/* Estilos para el formulario de inicio de sesión */
+.form-container {
+  max-width: 400px;
+  width: 100%;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Añade una sombra para mejor visibilidad */
+  background-color: #fff; /* Fondo blanco para el formulario */
+}
+
+/* Estilos para el logo de Panasonic */
+.panasonic-logo {
+  width: 300px; /* Ajusta el tamaño del logo según sea necesario */
+  margin-bottom: 20px; /* Espacio debajo del logo */
+}
+
+/* Estilos para los elementos del formulario */
+.form-container label {
+  display: block;
+  margin-bottom: 10px;
+}
+
+.form-container input[type="email"],
+.form-container input[type="password"] {
+  width: calc(100% - 5px); /* Ajusta el ancho para dejar espacio a los lados */
+  padding: 10px;
+  margin-bottom: 20px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-sizing: border-box; /* Asegura que el padding se incluya en el tamaño total del input */
+}
+
+.form-container button {
+  width: calc(100% - 5px);
+  padding: 10px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.form-container button:hover {
+  background-color: #0056b3;
+}
