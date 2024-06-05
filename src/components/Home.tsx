@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {jwtDecode} from 'jwt-decode';
 import axios from 'axios';
-import '../styles/home.css'; // Asegúrate de importar los estilos
+import '../styles/home.css';
 import PanasonicLogo from '../images/logo-Panasonic.jpg';
 
 const Home: React.FC = () => {
   const [productos, setProductos] = useState<any[]>([]);
+  const [searchType, setSearchType] = useState('code');
+  const [searchParam, setSearchParam] = useState('');
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  // Obtener el token del localStorage
   const token = localStorage.getItem('token');
-
-  // Decodificar el token para obtener el nombre del usuario
   let usuarioNombre = 'Usuario';
+
   if (token) {
     try {
-      // Decodificar el token
       const decodedToken: any = jwtDecode(token);
       usuarioNombre = decodedToken.nombre || 'Usuario';
     } catch (error) {
@@ -25,13 +25,12 @@ const Home: React.FC = () => {
   }
 
   useEffect(() => {
-    // Obtener la lista de productos
     const fetchProductos = async () => {
       try {
         const response = await axios.get('http://localhost:3000/productos/all', {
           headers: {
-            Authorization: `Bearer ${token}`
-          }
+            Authorization: `Bearer ${token}`,
+          },
         });
         setProductos(response.data);
       } catch (error) {
@@ -43,57 +42,105 @@ const Home: React.FC = () => {
   }, [token]);
 
   const handleLogout = () => {
-    // Eliminar el token del localStorage
     localStorage.removeItem('token');
-    // Redirigir al usuario a la ruta principal
     navigate('/');
   };
 
+  const handleSearch = async () => {
+    if (!token) {
+      setError('Token de autorización no proporcionado');
+      return;
+    }
+
+    try {
+      const response = await axios.get('http://localhost:3000/productos', {
+        params: { type: searchType, param: searchParam },
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setProductos(response.data);
+      setError('');
+    } catch (error) {
+      console.error('Error buscando productos', error);
+      setError('Error interno del servidor');
+    }
+  };
+
   return (
-    <div className="home-container">
-      <header className="header">
-        <div className="header-left">
-          <img src={PanasonicLogo} alt="Panasonic Logo" className="logo" />
-          <span className="user-name"><h3 className="welcome-message">Bienvenido al Sistema de Inventario, {usuarioNombre}</h3></span>
+    <div className="dashboard">
+      <aside className="sidebar">
+        <div className="logo">
+          <img src={PanasonicLogo} alt="Panasonic Logo" className="logo img" />
         </div>
-        <div className="header-right">
-          <button onClick={handleLogout} className="logout-button">Logout</button>
+        <div className="user-info">
+          <h3 className="welcome-message">{usuarioNombre}</h3>
         </div>
-      </header>
-      <nav>
-        <ul className="nav-menu">
-          <li>
-            <Link to="/nuevo-producto">Nuevo producto</Link>
-          </li>
-          <li>
-            <Link to="/movimientos-inventario">Movimientos de Inventario</Link>
-          </li>
-          <li>
-            <Link to="/entradas-inventario">Entrada de Inventario</Link>
-          </li>
-          <li>
-            <Link to="/salidas-inventario">Salida de Inventario</Link>
-          </li>
-          {/* Agregar más enlaces según las funcionalidades */}
-        </ul>
-      </nav>
-      <div className="product-list">
-        <h2>Lista de Productos</h2>
-        {productos.length > 0 ? (
-          productos.map((producto) => (
-            <div key={producto.id} className="product-item">
-              <p><strong>Código:</strong> {producto.codigo}</p>
-              <p><strong>Nombre:</strong> {producto.nombre}</p>
-              <p><strong>Cantidad:</strong> {producto.cantidad}</p>
-              {/* Agregar más detalles del producto si es necesario */}
-            </div>
-          ))
-        ) : (
-          <p>No hay productos disponibles.</p>
-        )}
-      </div>
+        <button onClick={handleLogout} className="logout-button">Logout</button>
+        <nav className="main-menu">
+          <ul>
+            <li><Link to="/nuevo-producto">Nuevo producto</Link></li>
+            <li><Link to="/entradas-inventario">Entradas de Inventario</Link></li>
+            <li><Link to="/salidas-inventario">Salidas de Inventario</Link></li>
+            <li><Link to="/departamentos">Departamentos</Link></li>
+            <li><Link to="/ubicaciones">Ubicaciones</Link></li>
+            <li><Link to="/reportes">Reportes</Link></li>
+          </ul>
+        </nav>
+      </aside>
+      <main className="content">
+        <div className="search-container">
+          <select value={searchType} onChange={(e) => setSearchType(e.target.value)}>
+            <option value="code">Buscar por código</option>
+            <option value="name">Buscar por nombre</option>
+            <option value="description">Buscar por descripción</option>
+          </select>
+          <input
+            type="text"
+            value={searchParam}
+            onChange={(e) => setSearchParam(e.target.value)}
+            placeholder={`Buscar por ${searchType}`}
+          />
+          <button onClick={handleSearch}>Buscar</button>
+        </div>
+        <div className="product-list">
+          <span>Lista de Productos</span>
+          {productos.length > 0 ? (
+            productos.map((producto) => (
+              <div key={producto.id} className="product-item">
+                <div className="product-column">
+                  <p><strong>Código:</strong> {producto.codigo}</p>
+                  <p><strong>Nombre:</strong> {producto.nombre}</p>
+                  <p><strong>Cantidad:</strong> {producto.cantidad}</p>
+                  <p><strong>Ubicación:</strong> {producto.ubicacion}</p>
+                  <p><strong>Descripción:</strong> {producto.descripcion}</p>
+                </div>
+                <div className="product-column">
+                  <p><strong>Proveedor:</strong> {producto.proveedor}</p>
+                  <p><strong>Precio Unidad ₡:</strong> {producto.preciounidadcol}</p>
+                  <p><strong>Precio Unidad $:</strong> {producto.preciounidadusd}</p>
+                  <p><strong>Total ₡:</strong> {producto.preciototalcol}</p>
+                  <p><strong>Total $:</strong> {producto.preciototalusd}</p>
+                </div>
+                <div className="product-column">
+                  <div className="product-buttons">
+                    <button>Entrada</button>
+                    <button>Salida</button>
+                    <button>Modificar</button>
+                    <button>Eliminar</button>
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p>No hay productos disponibles.</p>
+          )}
+        </div>
+      </main>
     </div>
   );
 };
 
 export default Home;
+
+
+
