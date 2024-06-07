@@ -1,0 +1,78 @@
+/* modalES.css */
+
+/* Estilos para el fondo oscurecido detrás del modal */
+.ReactModal__Overlay {
+    opacity: 0;
+    transition: opacity 200ms ease-in-out;
+  }
+  
+  .ReactModal__Overlay--after-open {
+    opacity: 1;
+  }
+  
+  .ReactModal__Overlay--before-close {
+    opacity: 0;
+  }
+  
+  /* Estilos para el contenido del modal */
+  .ReactModal__Content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border: none;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.1);
+    width: 400px;
+  }
+  
+  /* Estilos para el botón de cerrar el modal */
+  .ReactModal__Content button.close-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    color: #aaa;
+  }
+  
+  /* Estilos para el título del modal */
+  .ReactModal__Content h2 {
+    margin-top: 0;
+  }
+  
+  /* Estilos para los campos de entrada y etiquetas */
+  .ReactModal__Content form label {
+    display: block;
+    margin-bottom: 10px;
+  }
+  
+  .ReactModal__Content form input[type="text"],
+  .ReactModal__Content form input[type="number"] {
+    width: 100%;
+    padding: 8px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+  }
+  
+  .ReactModal__Content form button[type="submit"] {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  
+  .ReactModal__Content form button[type="submit"]:hover {
+    background-color: #0056b3;
+  }
+  
