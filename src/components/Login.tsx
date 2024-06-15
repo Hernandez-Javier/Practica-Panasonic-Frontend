@@ -4,7 +4,7 @@ import api from '../api';
 import '../styles/login.css'; // Importa el archivo CSS de estilos
 
 // Importa el logo de Panasonic
-import PanasonicLogo from '../images/logo-Panasonic.jpg';
+import PanasonicLogo from '../images/logo-Panasonic-login.png';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');

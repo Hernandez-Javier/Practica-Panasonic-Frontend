@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, ChangeEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {jwtDecode} from 'jwt-decode';
 import { format } from 'date-fns';
@@ -12,7 +12,21 @@ import ModalDevolucion from './Devolucion';
 import ModalSalidaparticular from './SalidaParticular';
 import ModalUbicacion from './Ubicacion'; // Importar el componente CRUD de Ubicaciones
 import ModalDepartamento from './Departamento';
+import ModalEditar from './EditProducto';
 
+interface Producto {
+  id: number;
+  codigo: string;
+  nombre: string;
+  descripcion: string;
+  ubicacion: string;
+  proveedor: string;
+  cantidad: number;
+  cantidadminima: number;
+  preciounidadcol: number;
+  preciounidadusd: number;
+  categoria: string;
+}
 
 const Home: React.FC = () => {
   const [productos, setProductos] = useState<any[]>([]);
@@ -31,10 +45,9 @@ const Home: React.FC = () => {
   const [showDepartamentos, setShowDepartamentos] = useState(false);//estado par mostrar departamentos
   const [bitacora, setBitacora] = useState<any[]>([]);//estado para la bitacora
   const [showBitacora, setShowBitacora] = useState(false);//estado para mostrar la bitacora
-  //const [searchType, setSearchType] = useState('code');
-  //const [searchParam, setSearchParam] = useState('');
   const [error, setError] = useState('');
   const [isProductoModalOpen, setIsProductoModalOpen] = useState(false);
+  const [isEditarProductoModalOpen, setIsEditarProductoModalOpen] = useState(false);
   const [isEntradaModalOpen, setIsEntradaModalOpen] = useState(false);
   const [isSalidaModalOpen, setIsSalidaModalOpen] = useState(false);
   const [isDevolucionModalOpen, setIsDevolucionModalOpen] = useState(false);
@@ -43,13 +56,23 @@ const Home: React.FC = () => {
   const [isDepartamentoModalOpen, setIsDepartamentoModalOpen] = useState(false);
   const [codigoProducto, setCodigoProducto] = useState('');
   const [nombreProducto, setNombreProducto] = useState('');
+  const [productoSeleccionado, setProductoSeleccionado] = useState<Producto | null>(null); // Estado para el producto seleccionado para editar
   const [searchTerm, setSearchTerm] = useState("");
-  const [shouldUpdate, setShouldUpdate] = useState(false);
+  const [activeCategory, setActiveCategory] = useState(''); //guarda la categoria actual para que se muestre al usuario
 
   const navigate = useNavigate();
 
   const token = localStorage.getItem('token');
   let usuarioNombre = 'Usuario';
+
+  useEffect(() => {
+    if (!token) {
+      navigate('/'); // Redirigir al login si no hay token
+    } else {
+      fetchProductos();
+      setActiveCategory('productos');
+    }
+  }, [token, navigate]);
 
   if (token) {
     try {
@@ -59,22 +82,6 @@ const Home: React.FC = () => {
       console.error('Error decodificando el token:', error);
     }
   }
-
-  useEffect(() => {
-    if (!token) {
-      navigate('/'); // Redirigir al login si no hay token
-    } else {
-      fetchProductos();
-    }
-  }, [token, navigate]);
-
-  useEffect(() => {
-    if (shouldUpdate) {
-      // Lógica para actualizar el contenido del home
-      fetchProductos(); // O la función correspondiente para actualizar los datos
-      setShouldUpdate(false);
-    }
-  }, [shouldUpdate]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -263,15 +270,19 @@ const Home: React.FC = () => {
       return;
     }
 
-    try {
-      await axios.delete(`http://localhost:3000/productos/eliminar/${codigo}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+    const confirmarEliminar = window.confirm("¿Deseas eliminar este producto?");
 
-      setProductos(productos.filter(producto => producto.codigo !== codigo));
-    } catch (error) {
-      console.error('Error eliminando el producto', error);
-      setError('Error al eliminar el producto');
+    if (confirmarEliminar) {
+      try {
+        await axios.delete(`http://localhost:3000/productos/eliminar/${codigo}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+  
+        setProductos(productos.filter(producto => producto.codigo !== codigo));
+      } catch (error) {
+        console.error('Error eliminando el producto', error);
+        setError('Error al eliminar el producto');
+      }
     }
   };
 
@@ -282,16 +293,21 @@ const Home: React.FC = () => {
       return;
     }
 
-    try {
-      await axios.delete(`http://localhost:3000/ubicaciones/eliminar/${nombre}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+    const confirmarEliminar = window.confirm("¿Deseas eliminar esta ubicación?");
 
-      setUbicaciones(ubicaciones.filter(ubicacion => ubicacion.nombre !== nombre));
-    } catch (error) {
-      console.error('Error eliminando la ubicacion', error);
-      setError('Error al eliminar la ubicacion');
+    if (confirmarEliminar) {
+      try {
+        await axios.delete(`http://localhost:3000/ubicaciones/eliminar/${nombre}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+  
+        setUbicaciones(ubicaciones.filter(ubicacion => ubicacion.nombre !== nombre));
+      } catch (error) {
+        console.error('Error eliminando la ubicacion', error);
+        setError('Error al eliminar la ubicacion');
+      }
     }
+    
   };
 
   //eliminar departamento
@@ -301,15 +317,19 @@ const Home: React.FC = () => {
       return;
     }
 
-    try {
-      await axios.delete(`http://localhost:3000/departamentos/eliminar/${nombre}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+    const confirmarEliminar = window.confirm("¿Deseas eliminar este departamento?");
 
-      setDepartamentos(departamentos.filter(departamento => departamento.nombre !== nombre));
-    } catch (error) {
-      console.error('Error eliminando el producto', error);
-      setError('Error al eliminar el producto');
+    if (confirmarEliminar) {
+      try {
+        await axios.delete(`http://localhost:3000/departamentos/eliminar/${nombre}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+  
+        setDepartamentos(departamentos.filter(departamento => departamento.nombre !== nombre));
+      } catch (error) {
+        console.error('Error eliminando el producto', error);
+        setError('Error al eliminar el producto');
+      }
     }
   };
 
@@ -329,8 +349,55 @@ const Home: React.FC = () => {
     setNombreProducto(nombre);
   };
 
-   //entrada de un producto
-   const handleEntrada = async (codigoProducto: string, cantidad: number, ordenCompra: string) => {
+  //abrir modal de edicion
+  const handleOpenEditarProductoModal = (producto: Producto) => {
+    setProductoSeleccionado(producto);
+    setIsEditarProductoModalOpen(true);
+  };
+
+  //editar producto
+  const handleEditar = async (
+    codigo: string,
+    nombre: string,
+    descripcion: string,
+    ubicacion: string,
+    proveedor: string,
+    cantidad: number,
+    cantidadMinima: number,
+    precioUnidadCol: number,
+    precioUnidadUSD: number,
+    categoria: string
+  ) => {
+    try {
+      const response = await axios.put(
+        `http://localhost:3000/productos/modify/${codigo}`,
+        {
+          nombre,
+          descripcion,
+          ubicacion,
+          proveedor,
+          cantidad,
+          cantidadMinima,
+          precioUnidadCol,
+          precioUnidadUSD,
+          categoria
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      console.log(response.data);
+      fetchProductos();
+      setIsEditarProductoModalOpen(false);
+    } catch (error) {
+      console.error('Error al editar el producto:', error);
+    }
+  };
+  
+  //entrada de un producto
+  const handleEntrada = async (codigoProducto: string, cantidad: number, ordenCompra: string) => {
     try {
       const response = await axios.post('http://localhost:3000/productos/entrada', {
         codigoProducto,
@@ -342,9 +409,16 @@ const Home: React.FC = () => {
         },
       });
       console.log(response.data);
-      setShouldUpdate(true);
+      window.alert("gyggygygy");
+      fetchProductos();
     } catch (error) {
       console.error('Error al realizar la entrada:', error);
+      window.alert(error);
+      if (axios.isAxiosError(error) && error.response?.status === 409) {
+        setError('El producto con este código ya existe');
+      } else {
+        setError('Error al registrar el producto');
+      }
     }
   };
 
@@ -362,7 +436,7 @@ const Home: React.FC = () => {
         },
       });
       console.log(response.data);
-      setShouldUpdate(true);
+      fetchProductos();
     } catch (error) {
       console.error('Error al realizar la salida:', error);
     }
@@ -385,7 +459,7 @@ const Home: React.FC = () => {
         },
       });
       console.log(response.data);
-      setShouldUpdate(true);
+      fetchProductos();
     } catch (error) {
       console.error('Error al realizar la devolución:', error);
     }
@@ -408,7 +482,7 @@ const Home: React.FC = () => {
         },
       });
       console.log(response.data);
-      setShouldUpdate(true);
+      fetchProductos();
     } catch (error) {
       console.error('Error al realizar la salida particular:', error);
     }
@@ -445,7 +519,7 @@ const Home: React.FC = () => {
         },
       });
       console.log(response.data);
-      setShouldUpdate(true);
+      fetchProductos();
     } catch (error) {
       console.error('Error al ingresar producto:', error);
     }
@@ -466,7 +540,7 @@ const Home: React.FC = () => {
         },
       });
       console.log(response.data);
-      setShouldUpdate(true);
+      fetchUbicaciones();
     } catch (error) {
       console.error('Error al ingresar la ubicacion:', error);
     }
@@ -487,7 +561,7 @@ const Home: React.FC = () => {
         },
       });
       console.log(response.data);
-      setShouldUpdate(true);
+      fetchDepartamentos();
     } catch (error) {
       console.error('Error al ingresar el departamento:', error);
     }
@@ -509,7 +583,8 @@ const Home: React.FC = () => {
 
   //filtros para busquedas
   const filteredEntradas = entradas.filter(entrada =>
-    entrada.codigoproducto.toLowerCase().includes(searchTerm.toLowerCase())
+    entrada.codigoproducto.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    entrada.ordencompra.toLowerCase().includes(searchTerm.toLowerCase())
   );
   
   const filteredSalidas = salidas.filter(salida =>
@@ -539,7 +614,8 @@ const Home: React.FC = () => {
   );
 
   const filteredBitacora = bitacora.filter(bit =>
-    bit.tipoactividad.toLowerCase().includes(searchTerm.toLowerCase())
+    bit.tipoactividad.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    bit.responsable.toLowerCase().includes(searchTerm.toLowerCase())
   );
   
   return (
@@ -550,45 +626,52 @@ const Home: React.FC = () => {
         </div>
         <div className="user-info">
           <h3 className="welcome-message">{usuarioNombre}</h3>
+          <button onClick={handleLogout} className="logout-button">Logout</button>
         </div>
-        <button onClick={handleLogout} className="logout-button">Logout</button>
         <nav className="main-menu">
           <ul>
-            <li><Link to="#" onClick={fetchProductos}>Productos</Link></li>
-            <li><Link to="#" onClick={fetchEntradas}>Entradas de Inventario</Link></li>
-            <li><Link to="#" onClick={fetchSalidas}>Salidas de Inventario</Link></li>
-            <li><Link to="#" onClick={fetchSalidasParticulares}>Salidas Particulares</Link></li>
-            <li><Link to="#" onClick={fetchDevoluciones}>Devoluciones</Link></li>
-            <li><Link to="#" onClick={fetchUbicaciones}>Ubicaciones</Link></li>
-            <li><Link to="#" onClick={fetchDepartamentos}>Departamentos</Link></li>
+            <li><Link to="#" className={activeCategory === 'productos' ? 'active' : ''} onClick={() => {fetchProductos(); setActiveCategory('productos'); }}>Productos</Link></li>
+            <li><Link to="#" className={activeCategory === 'entradas' ? 'active' : ''} onClick={() => {fetchEntradas(); setActiveCategory('entradas'); }}>Entradas de Inventario</Link></li>
+            <li><Link to="#" className={activeCategory === 'salidas' ? 'active' : ''} onClick={() => {fetchSalidas(); setActiveCategory('salidas'); }}>Salidas de Inventario</Link></li>
+            <li><Link to="#" className={activeCategory === 'salidasP' ? 'active' : ''} onClick={() => {fetchSalidasParticulares(); setActiveCategory('salidasP'); }}>Salidas Particulares</Link></li>
+            <li><Link to="#" className={activeCategory === 'devolucionees' ? 'active' : ''} onClick={() => {fetchDevoluciones(); setActiveCategory('devoluciones'); }}>Devoluciones</Link></li>
+            <li><Link to="#" className={activeCategory === 'ubicaciones' ? 'active' : ''} onClick={() => {fetchUbicaciones(); setActiveCategory('ubicaciones'); }}>Ubicaciones</Link></li>
+            <li><Link to="#" className={activeCategory === 'departamentos' ? 'active' : ''} onClick={() => {fetchDepartamentos(); setActiveCategory('departamentos'); }}>Departamentos</Link></li>
             <li><Link to="/reportes">Reportes</Link></li>
             <li><Link to="#">Usuarios</Link></li>
-            <li><Link to="#" onClick={fetchBitacora}>Bitácora de Actividad</Link></li>
+            <li><Link to="#" className={activeCategory === 'bitacora' ? 'active' : ''} onClick={() => {fetchBitacora(); setActiveCategory('bitacora'); }}>Bitácora de Actividad</Link></li>
           </ul>
         </nav>
       </aside>
       <main className="content">
-        <div className="search-container">
-          <span className="product-list-header">Buscar:</span>
-          <input
-            type="text"
-            placeholder="Escribe algo"
-            value={searchTerm}
-            onChange={handleSearchChange}
-            className="search-bar"
-          />
+        <div className="sticky-container">
+          <div className="header-title">
+            <span className="product-list-header">
+              {showEntradas ? 'Lista de Entradas' : 
+              showSalidas ? 'Lista de Salidas' : 
+              showDevoluciones ? 'Lista de Devoluciones' : 
+              showSalidasParticulares ? 'Lista de Salidas Particulares' :
+              showBitacora ? 'Bitacora de Actividad' :
+              showUbicaciones ? 'Lista de Ubicaciones' :
+              showDepartamentos ? 'Lista de Departamentos' :
+              'Lista de Productos'}
+            </span>
+          </div>
+          <div className="search-container">
+            <div className="search-bar-container">
+              <span className="search-label">Buscar:</span>
+              <input
+                type="text"
+                placeholder="Escribe algo"
+                value={searchTerm}
+                onChange={handleSearchChange}
+                className="search-bar"
+              />
+            </div>
+          </div>
         </div>
 
-        <div className="product-list">
-          <span className="product-list-header">
-            {showEntradas ? 'Lista de Entradas' : 
-            showSalidas ? 'Lista de Salidas' : 
-            showDevoluciones ? 'Lista de Devoluciones' : 
-            showSalidasParticulares ? 'Lista de Salidas Particulares' :
-            showUbicaciones ? 'Lista de Ubicaciones' :
-            showDepartamentos ? 'Lista de Departamentos' :
-            'Lista de Productos'}
-          </span>
+        <div className="product-list"> 
           {showEntradas ? (
             filteredEntradas.length > 0 ? (
               <div className="product-grid">
@@ -678,7 +761,7 @@ const Home: React.FC = () => {
                     <div className="product-column">
                       <p><strong>Usuario ID:</strong> {registro.usuarioid}</p>
                       <p><strong>Responsable:</strong> {registro.responsable}</p>
-                      <p><strong>Detalles:</strong> {registro.detalles}</p>
+                      <p><strong>Detalles:</strong> {registro.detalles.replace(/["'{}]/g, '').replace(/,/g, ', ')}</p>
                     </div>
                     <div className="product-column">
                       <p><strong>Tipo de Actividad:</strong> {registro.tipoactividad}</p>
@@ -708,8 +791,8 @@ const Home: React.FC = () => {
                         <div className="products-buttons-column">
                           <div className="product-buttons">
                             {/*<button onClick={() => handleModificarUbicacion(ubicacion.id)}>Modificar</button>*/}
-                            <button onClick={() => handleDeleteUbicacion(ubicacion.nombre)}>Eliminar</button>
                           </div>
+                          <button className="delete-product-button" onClick={() => handleDeleteUbicacion(ubicacion.nombre)}>Eliminar</button>
                         </div>
                       </div>
                     ))}
@@ -735,8 +818,8 @@ const Home: React.FC = () => {
                         <div className="products-buttons-column">
                           <div className="product-buttons">
                             {/*<button onClick={() => handleModificarDepartamento(departamento.id)}>Modificar</button>*/}
-                            <button onClick={() => handleDeleteDepartamento(departamento.nombre)}>Eliminar</button>
                           </div>
+                          <button className="delete-product-button" onClick={() => handleDeleteDepartamento(departamento.nombre)}>Eliminar</button>
                         </div>
                       </div>
                     ))}
@@ -760,11 +843,11 @@ const Home: React.FC = () => {
                         <p><strong>Código:</strong> {producto.codigo}</p>
                         <p><strong>Nombre:</strong> {producto.nombre}</p>
                         <p><strong>Cantidad:</strong> {producto.cantidad}</p>
-                        <p><strong>Ubicación:</strong> {producto.ubicacion}</p>
-                        <p><strong>Descripción:</strong> {producto.descripcion}</p>
+                        <p><strong>Cantidad Mínima:</strong> {producto.cantidadminima}</p>
+                        <p><strong>Descripción:</strong> {producto.descripcion.length > 85 ? `${producto.descripcion.substring(0, 85)}...` : producto.descripcion}</p>
                       </div>
                       <div className="product-column">
-                        <p><strong>Proveedor:</strong> {producto.proveedor}</p>
+                        <p><strong>Ubicación:</strong> {producto.ubicacion}</p>
                         <p><strong>Precio Unidad ₡:</strong> {producto.preciounidadcol}</p>
                         <p><strong>Precio Unidad $:</strong> {producto.preciounidadusd}</p>
                         <p><strong>Total ₡:</strong> {producto.preciototalcol}</p>
@@ -774,9 +857,9 @@ const Home: React.FC = () => {
                         <div className="product-buttons">
                           <button onClick={() => handleOpenEntradaModal(producto.codigo, producto.nombre)}>Entrada</button>
                           <button onClick={() => handleOpenSalidaModal(producto.codigo, producto.nombre)}>Salida</button>
-                          <button>Modificar</button>
-                          <button onClick={() => handleDelete(producto.codigo)}>Eliminar</button>
+                          <button onClick={() => handleOpenEditarProductoModal(producto)}>Editar</button>
                         </div>
+                        <button className="delete-product-button" onClick={() => handleDelete(producto.codigo)}>Eliminar</button>
                       </div>
                     </div>
                   ))}
@@ -807,8 +890,8 @@ const Home: React.FC = () => {
       />
       <ModalProducto
         isOpen={isProductoModalOpen}
-        onRequestClose={() => {setIsProductoModalOpen(false)}}
         onSubmit={handleProductoNuevo}
+        onRequestClose={() => {setIsProductoModalOpen(false)}}
       />
       <ModalDevolucion
         isOpen={isDevolucionModalOpen}
@@ -830,6 +913,23 @@ const Home: React.FC = () => {
         onRequestClose={() => {setIsDepartamentoModalOpen(false)}}
         onSubmit={handleDepartamentoNuevo}
       />
+      {productoSeleccionado && (
+        <ModalEditar
+          isOpen={isEditarProductoModalOpen}
+          onRequestClose={() => setIsEditarProductoModalOpen(false)}
+          onSubmit={handleEditar}
+          codigo={productoSeleccionado.codigo}
+          nombre={productoSeleccionado.nombre}
+          descripcion={productoSeleccionado.descripcion}
+          ubicacion={productoSeleccionado.ubicacion}
+          proveedor={productoSeleccionado.proveedor}
+          cantidad={productoSeleccionado.cantidad}
+          cantidadMinima={productoSeleccionado.cantidadminima}
+          precioUnidadCol={productoSeleccionado.preciounidadcol}
+          precioUnidadUSD={productoSeleccionado.preciounidadusd}
+          categoria={productoSeleccionado.categoria}
+        />
+      )}
     </div>
   );
 };

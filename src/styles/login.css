@@ -5,51 +5,54 @@
   align-items: center;
   justify-content: center;
   height: 100vh;
+  background-color: #f0f0f0; /* Fondo gris claro */
 }
 
 /* Estilos para el formulario de inicio de sesión */
 .form-container {
   max-width: 400px;
   width: 100%;
-  padding: 20px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Añade una sombra para mejor visibilidad */
-  background-color: #fff; /* Fondo blanco para el formulario */
+  padding: 30px; /* Aumentamos el padding para más espacio */
+  border-radius: 10px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1); /* Sombra más suave y elevada */
+  background-color: #ffffff; /* Fondo blanco */
 }
 
 /* Estilos para el logo de Panasonic */
 .panasonic-logo {
-  width: 300px; /* Ajusta el tamaño del logo según sea necesario */
-  margin-bottom: 20px; /* Espacio debajo del logo */
+  width: 200px; /* Reducimos un poco el tamaño del logo */
+  margin-bottom: 30px; /* Más espacio debajo del logo */
 }
 
 /* Estilos para los elementos del formulario */
 .form-container label {
-  display: block;
-  margin-bottom: 10px;
+  font-size: 1.1em; /* Tamaño de fuente un poco más grande */
+  margin-bottom: 15px; /* Espacio menor entre elementos */
 }
 
 .form-container input[type="email"],
 .form-container input[type="password"] {
-  width: calc(100% - 5px); /* Ajusta el ancho para dejar espacio a los lados */
-  padding: 10px;
-  margin-bottom: 20px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  box-sizing: border-box; /* Asegura que el padding se incluya en el tamaño total del input */
+  width: 100%; /* Ancho completo */
+  padding: 12px;
+  margin-bottom: 25px; /* Mayor espacio inferior */
+  border: 2px solid #ccc; /* Borde más grueso */
+  border-radius: 8px;
+  box-sizing: border-box;
+  font-size: 1em; /* Tamaño de fuente estándar */
 }
 
 .form-container button {
-  width: calc(100% - 5px);
-  padding: 10px;
-  background-color: #007bff;
-  color: #fff;
+  width: 100%;
+  padding: 12px;
+  background-color: #007bff; /* Color de fondo verde */
+  color: white;
   border: none;
-  border-radius: 5px;
+  border-radius: 8px;
   cursor: pointer;
+  font-size: 1.1em;
+  transition: background-color 0.3s ease; /* Transición suave en el cambio de color */
 }
 
 .form-container button:hover {
-  background-color: #0056b3;
+  background-color: #0957ac; /* Cambio de color verde oscuro al hacer hover */
 }

@@ -1,5 +1,6 @@
 body {
-  font-family: 'Arial', sans-serif; 
+  font-family: 'Arial', sans-serif;
+  overflow: hidden;
 }
 
 .dashboard {
@@ -15,6 +16,7 @@ body {
   height: 100%;
   background-color: #2c3e50;
   color: #ffffff;
+  padding: 10px;
   padding-top: 20px;
   overflow: hidden;
 }
@@ -25,14 +27,15 @@ body {
   width: 150px; /* Tamaño ajustable según tus necesidades */
 }
 
-.logo img:hover {
-  filter: brightness(85%); /* Efecto de atenuación al pasar el mouse */
-}
-
 .user-info {
   text-align: center;
   margin-bottom: 15px; /* Reducción del margen inferior */
   font-size: 14px; /* Reducción del tamaño de fuente */
+  border: 2px solid #ccd8e9;
+  border-radius: 10px; /* Radio de los bordes redondeados */
+  background-color: #2c3e50; /* Color de fondo */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra */
+  padding: 10px;
 }
 
 .welcome-message {
@@ -47,7 +50,7 @@ body {
   margin: 0 auto;
   margin-top: 20px;
   padding: 8px; /* Reducción del padding */
-  background-color: #e74c3c;
+  background-color: #c0392b;
   border: none;
   border-radius: 5px; 
   color: #ffffff;
@@ -58,7 +61,7 @@ body {
 }
 
 .logout-button:hover {
-  background-color: #c0392b;
+  background-color: #9b3429;
 }
 
 .main-menu {
@@ -72,70 +75,81 @@ body {
 
 .main-menu a {
   display: block;
-  padding: 10px; /* Reducción del padding */
+  padding: 10px;
   color: #ffffff;
   text-decoration: none;
   font-size: 15px;
   transition: background-color 0.3s;
 }
 
-.main-menu a:hover {
-  background-color: #34495e;
+.main-menu a:hover, .main-menu ul li a.active {
+  background-color: #436485;
   border-radius: 5px;
 }
 
 /* Estilos del contenido */
 .content {
   flex: 1;
-  padding: 20px;
+  padding: 10px;
+  padding-top: 1px;
   overflow-y: auto;
   background-color: #f2f5f8; 
 }
 
-/* Estilos del contenedor de búsqueda */
+/* Contenedor sticky para la búsqueda y botones */
+.sticky-container {
+  position: -webkit-sticky; /* Safari */
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background-color: #f2f5f8;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  border: 2px solid #ccd8e9;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Añade una sombra para distinguirla del contenido */
+  margin-bottom: 10px;
+}
+
+/* Contenedor de los elementos de búsqueda */
 .search-container {
+  display: flex;
+  flex-direction: column; /* Apilar los elementos verticalmente */
+  align-items: center; /* Centrar el título horizontalmente */
+  gap: 10px; /* Espaciado entre los elementos */
+}
+
+.header-title {
+  width: 100%;
+  text-align: center; /* Centrar el texto */
+  font-size: 1em;
+  font-weight: bold;
+  text-align: left;
+  margin-bottom: 10px;
+}
+
+.search-bar-container {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 10px;
-  padding: 8px; 
-  border: 2px solid #ccd8e9; 
-  border-radius: 5px;
-  background-color: #ffffff;
+  width: 100%; /* Asegúrate de que ocupe el 100% del ancho */
+  justify-content: flex-start; /* Alinear a la izquierda */
 }
 
-/* Estilos para los elementos de búsqueda */
-.search-container select,
-.search-bar,
-.search-container button {
-  padding: 6px; /* Reducción del padding */
-  border: 1px solid #ccc;
-  border-radius: 3px;
-  font-size: 12px; /* Reducción del tamaño de fuente */
-}
-
-.search-container select {
-  font-size: 12px; 
+.search-label {
+  font-weight: bold;
+  font-size: 0.9em;
 }
 
 .search-bar {
-  flex-grow: 1;
-  max-width: 300px; /* Reducción del ancho máximo */
-}
-
-.search-container button {
-  background-color: #007bff;
-  color: white;
-  cursor: pointer;
+  width: 400px; /* Ancho fijo de 400px */
+  padding: 8px; 
+  border: 2px solid #ccd8e9; 
   border-radius: 5px;
-  margin-top: 8px;
+  font-size: 12px;
 }
 
-.search-container button:hover {
-  background-color: #0056b3;
-}
-
-/*estilos para el boton agregar producto*/
+/* Estilos para los botones */
 .add-product-button {
   background-color: #34495e;
   color: white;
@@ -160,14 +174,12 @@ body {
   transform: scale(1); /* Tamaño original al hacer clic */
 }
 
-
 /* Estilos de la lista de productos */
 .product-list {
   display: flex;
   flex-direction: column;
 }
 
-/* Estilos de cada elemento de producto */
 .product-item {
   display: flex;
   justify-content: space-between;
@@ -210,7 +222,7 @@ body {
   gap: 5px; /* Reducción del espacio entre botones */
 }
 
-.product-buttons button {
+.product-buttons button, .delete-product-button{
   padding: 6px; /* Reducción del padding */
   cursor: pointer;
   width: 80px; /* Reducción del ancho */
@@ -225,14 +237,13 @@ body {
   background-color: #0056b3;
 }
 
-/* Estilos para el título del encabezado de la lista de productos */
-.product-list-header {
-  font-size: 16px; 
-  font-weight: bold;
-  margin: 16px 0; 
+.delete-product-button {
+  margin-top: 5px;
 }
 
-/********************/
+.delete-product-button:hover {
+  background-color: #9b3429;
+}
 
 /* Estilos del contenedor de productos */
 .product-grid {

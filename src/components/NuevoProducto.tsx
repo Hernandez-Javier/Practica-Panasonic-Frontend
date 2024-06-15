@@ -1,22 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Modal from 'react-modal';
+import axios from 'axios';
 import '../styles/modalES.css';
+
+const token = localStorage.getItem('token');
 
 Modal.setAppElement('#root');
 
 interface ModalProductoProps {
   isOpen: boolean;
   onRequestClose: () => void;
-  onSubmit: (codigo: string, 
-    nombre: string, 
-    descripcion: string, 
-    ubicacion: string, 
-    proveedor: string, 
-    cantidad: number, 
-    cantidadMinima: number, 
-    precioUnidadCol: number, 
-    precioUnidadUSD: number, 
-    categoria: string) => void;
+  onSubmit: (
+    codigo: string,
+    nombre: string,
+    descripcion: string,
+    ubicacion: string,
+    proveedor: string,
+    cantidad: number,
+    cantidadMinima: number,
+    precioUnidadCol: number,
+    precioUnidadUSD: number,
+    categoria: string
+  ) => void;
 }
 
 const ModalProducto: React.FC<ModalProductoProps> = ({ isOpen, onRequestClose, onSubmit }) => {
@@ -30,37 +35,86 @@ const ModalProducto: React.FC<ModalProductoProps> = ({ isOpen, onRequestClose, o
   const [precioUnidadCol, setPrecioUnidadCol] = useState(0);
   const [precioUnidadUSD, setPrecioUnidadUSD] = useState(0);
   const [categoria, setCategoria] = useState('');
+  const [ubicaciones, setUbicaciones] = useState<{ id: string; nombre: string; descripcion: string }[]>([]);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (isOpen) {
+      fetchUbicaciones();
+    }
+  }, [isOpen]);
+
+  const fetchUbicaciones = async () => {
+    try {
+      const response = await axios.get('http://localhost:3000/ubicaciones/all', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setUbicaciones(response.data);
+    } catch (error) {
+      console.error('Error fetching ubicaciones:', error);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(
-      codigo,
-      nombre,
-      descripcion,
-      ubicacion,
-      proveedor,
-      cantidad,
-      cantidadMinima,
-      precioUnidadCol,
-      precioUnidadUSD,
-      categoria
-    );
-    setCodigo('');
-    setNombre('');
-    setDescripcion('');
-    setUbicacion('');
-    setProveedor('');
-    setCantidad(0);
-    setCantidadMinima(0);
-    setPrecioUnidadCol(0);
-    setPrecioUnidadUSD(0);
-    setCategoria('');
-    onRequestClose();
+
+    // Validar que todos los campos estén llenos
+    if (
+      codigo.trim() === '' ||
+      nombre.trim() === '' ||
+      descripcion.trim() === '' ||
+      ubicacion.trim() === '' ||
+      proveedor.trim() === '' ||
+      cantidad === 0 ||
+      cantidadMinima === 0 ||
+      precioUnidadCol === 0 ||
+      precioUnidadUSD === 0 ||
+      categoria.trim() === ''
+    ) {
+      setError('Por favor complete todos los campos.');
+      return;
+    }
+
+    try {
+      await onSubmit(
+        codigo,
+        nombre,
+        descripcion,
+        ubicacion,
+        proveedor,
+        cantidad,
+        cantidadMinima,
+        precioUnidadCol,
+        precioUnidadUSD,
+        categoria
+      );
+
+      // Limpiar los campos después de la operación exitosa
+      setCodigo('');
+      setNombre('');
+      setDescripcion('');
+      setUbicacion('');
+      setProveedor('');
+      setCantidad(0);
+      setCantidadMinima(0);
+      setPrecioUnidadCol(0);
+      setPrecioUnidadUSD(0);
+      setCategoria('');
+      
+      // Cerrar el modal después de la operación exitosa
+      onRequestClose();
+    } catch (error) {
+      // Mostrar mensaje de error y mantener el modal abierto
+      setError('Error al registrar el producto. Por favor, intenta de nuevo.');
+    }
   };
 
   return (
-    <Modal isOpen={isOpen} onRequestClose={onRequestClose} contentLabel="Entrada de Inventario" className="modal-content">
-      <h2>Entrada de Inventario</h2>
+    <Modal isOpen={isOpen} onRequestClose={onRequestClose} contentLabel="Nuevo Producto" className="modal-content">
+      <h2>Nuevo Producto</h2>
+      {error && <p className="error-message">{error}</p>}
       <form onSubmit={handleSubmit}>
         <label>
           Código del Producto:
@@ -76,7 +130,13 @@ const ModalProducto: React.FC<ModalProductoProps> = ({ isOpen, onRequestClose, o
         </label>
         <label>
           Ubicación:
-          <input type="text" value={ubicacion} onChange={(e) => setUbicacion(e.target.value)} />
+          <select value={ubicacion} onChange={(e) => setUbicacion(e.target.value)}>
+            {ubicaciones.map((ubica) => (
+              <option key={ubica.id} value={ubica.nombre}>
+                {ubica.nombre}
+              </option>
+            ))}
+          </select>
         </label>
         <label>
           Proveedor:
@@ -102,7 +162,7 @@ const ModalProducto: React.FC<ModalProductoProps> = ({ isOpen, onRequestClose, o
           Categoría:
           <input type="text" value={categoria} onChange={(e) => setCategoria(e.target.value)} />
         </label>
-        <button type="submit">Registrar Entrada</button>
+        <button type="submit">Registrar Producto</button>
       </form>
     </Modal>
   );

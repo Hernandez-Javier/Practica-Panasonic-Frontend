@@ -29,7 +29,7 @@ const ModalUbicacion: React.FC<ModalUbicacionProps> = ({ isOpen, onRequestClose,
 
   return (
     <Modal isOpen={isOpen} onRequestClose={onRequestClose} contentLabel="Nueva Ubicacion" className="modal-content">
-      <h2>Entrada de Inventario</h2>
+      <h2>Nueva Ubicacion</h2>
       <form onSubmit={handleSubmit}>
         <label>
           Nombre:

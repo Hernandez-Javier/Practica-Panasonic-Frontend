@@ -28,8 +28,8 @@ const ModalDepartamento: React.FC<ModalDepartamentoProps> = ({ isOpen, onRequest
   };
 
   return (
-    <Modal isOpen={isOpen} onRequestClose={onRequestClose} contentLabel="Nueva Ubicacion" className="modal-content">
-      <h2>Entrada de Inventario</h2>
+    <Modal isOpen={isOpen} onRequestClose={onRequestClose} contentLabel="Nuevo Departamento" className="modal-content">
+      <h2>Nuevo Departamento</h2>
       <form onSubmit={handleSubmit}>
         <label>
           Nombre:

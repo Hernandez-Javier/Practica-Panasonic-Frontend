@@ -1,5 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Modal from 'react-modal';
+import axios from 'axios';
+import '../styles/modalES.css';
+
+const token = localStorage.getItem('token');
 
 Modal.setAppElement('#root');
 
@@ -17,6 +21,8 @@ const ModalSalida: React.FC<ModalSalidaProps> = ({ isOpen, onRequestClose, onSub
   const [destino, setDestino] = useState('');
   const [solicitante, setSolicitante] = useState('');
   const [nombre, setNombre] = useState('');
+  const [departamentos, setDepartamentos] = useState<{ id: string, nombre: string, descripcion: string }[]>([]);
+  const [error, setError] = useState('');
 
   // Actualizar el estado interno cuando cambian los props
   React.useEffect(() => {
@@ -25,6 +31,26 @@ const ModalSalida: React.FC<ModalSalidaProps> = ({ isOpen, onRequestClose, onSub
       setNombre(nombreProducto);
     }
   }, [isOpen, codigoProducto, nombreProducto]);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchDepartamentos();
+    }
+  }, [isOpen]);
+
+
+  const fetchDepartamentos = async () => {
+    try {
+      const response = await axios.get('http://localhost:3000/departamentos/all', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setDepartamentos(response.data);
+    } catch (error) {
+      console.error('Error fetching salidas:', error);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,7 +80,13 @@ const ModalSalida: React.FC<ModalSalidaProps> = ({ isOpen, onRequestClose, onSub
         </label>
         <label>
           Destino:
-          <input type="text" value={destino} onChange={(e) => setDestino(e.target.value)} />
+          <select value={destino} onChange={(e) => setDestino(e.target.value)}>
+            {departamentos.map((dep) => (
+              <option key={dep.id} value={dep.nombre}>
+                {dep.nombre}
+              </option>
+            ))}
+          </select>
         </label>
         <label>
           Solicitante:
