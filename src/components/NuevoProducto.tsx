@@ -21,7 +21,7 @@ interface ModalProductoProps {
     precioUnidadCol: number,
     precioUnidadUSD: number,
     categoria: string
-  ) => void;
+  ) => Promise<void>; // Asegurarse de que onSubmit retorne una promesa
 }
 
 const ModalProducto: React.FC<ModalProductoProps> = ({ isOpen, onRequestClose, onSubmit }) => {
@@ -37,10 +37,24 @@ const ModalProducto: React.FC<ModalProductoProps> = ({ isOpen, onRequestClose, o
   const [categoria, setCategoria] = useState('');
   const [ubicaciones, setUbicaciones] = useState<{ id: string; nombre: string; descripcion: string }[]>([]);
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       fetchUbicaciones();
+    }
+    if (!isOpen) {
+      setCodigo('');
+      setNombre('');
+      setDescripcion('');
+      setUbicacion('');
+      setProveedor('');
+      setCantidad(0);
+      setCantidadMinima(0);
+      setPrecioUnidadCol(0);
+      setPrecioUnidadUSD(0);
+      setCategoria('');
+      setError('');
     }
   }, [isOpen]);
 
@@ -77,6 +91,9 @@ const ModalProducto: React.FC<ModalProductoProps> = ({ isOpen, onRequestClose, o
       return;
     }
 
+    setIsLoading(true);
+    setError('');
+
     try {
       await onSubmit(
         codigo,
@@ -102,12 +119,18 @@ const ModalProducto: React.FC<ModalProductoProps> = ({ isOpen, onRequestClose, o
       setPrecioUnidadCol(0);
       setPrecioUnidadUSD(0);
       setCategoria('');
-      
+
       // Cerrar el modal después de la operación exitosa
       onRequestClose();
-    } catch (error) {
-      // Mostrar mensaje de error y mantener el modal abierto
-      setError('Error al registrar el producto. Por favor, intenta de nuevo.');
+    } catch (error: any) {
+      console.log(error);
+      if (error.statusCode === 404) {
+        setError(error.message); // Mostrar el mensaje del error recibido
+      } else {
+        setError('Error al registrar el producto. Por favor, intenta de nuevo.');
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -162,7 +185,9 @@ const ModalProducto: React.FC<ModalProductoProps> = ({ isOpen, onRequestClose, o
           Categoría:
           <input type="text" value={categoria} onChange={(e) => setCategoria(e.target.value)} />
         </label>
-        <button type="submit">Registrar Producto</button>
+        <button type="submit" disabled={isLoading}>
+          {isLoading ? 'Registrando...' : 'Registrar Producto'}
+        </button>
       </form>
     </Modal>
   );

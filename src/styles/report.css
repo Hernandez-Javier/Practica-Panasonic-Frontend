@@ -1,0 +1,55 @@
+.filters {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Espacio entre los elementos */
+    padding: 20px;
+    background-color: #f9f9f9; /* Fondo claro para distinguir el contenedor */
+    border: 1px solid #ddd; /* Borde gris claro */
+    border-radius: 8px;
+    margin-bottom: 20px; /* Espacio inferior para separar del contenido */
+  }
+  
+  .filters div {
+    display: flex;
+    gap: 10px; /* Espacio entre los elementos del mismo grupo */
+    align-items: center;
+  }
+  
+  .filters label {
+    font-weight: bold;
+  }
+  
+  .filters input[type="date"] {
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  .filters select {
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #fff;
+    cursor: pointer;
+  }
+
+  /*estilos para la tabla de reportes*/
+
+  .report-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+  
+  .report-table th,
+  .report-table td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: left;
+  }
+  
+  .report-table th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+  }
+  

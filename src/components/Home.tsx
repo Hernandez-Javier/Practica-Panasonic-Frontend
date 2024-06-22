@@ -409,11 +409,9 @@ const Home: React.FC = () => {
         },
       });
       console.log(response.data);
-      window.alert("gyggygygy");
       fetchProductos();
     } catch (error) {
       console.error('Error al realizar la entrada:', error);
-      window.alert(error);
       if (axios.isAxiosError(error) && error.response?.status === 409) {
         setError('El producto con este código ya existe');
       } else {
@@ -438,7 +436,16 @@ const Home: React.FC = () => {
       console.log(response.data);
       fetchProductos();
     } catch (error) {
-      console.error('Error al realizar la salida:', error);
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        console.log(error);
+        throw { message: 'Producto no encontrado', statusCode: 404 };
+      }
+      if (axios.isAxiosError(error) && error.response?.status === 400) {
+        console.log(error);
+        throw { message: 'La cantidad en inventario es muy baja', statusCode: 409 };
+      } else {
+        throw { message: 'Error al realizar la salida', statusCode: 500 };
+      }
     }
   };
 
@@ -458,10 +465,14 @@ const Home: React.FC = () => {
             Authorization: `Bearer ${token}`, // Asegúrate de tener token definido antes de usarlo aquí
         },
       });
-      console.log(response.data);
       fetchProductos();
+      return response.data;
     } catch (error) {
-      console.error('Error al realizar la devolución:', error);
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        throw { message: 'Producto no encontrado', statusCode: 404 };
+      } else {
+        throw { message: 'Error al realizar la devolución', statusCode: 500 };
+      }
     }
   };
 
@@ -481,10 +492,19 @@ const Home: React.FC = () => {
             Authorization: `Bearer ${token}`, // Asegúrate de tener token definido antes de usarlo aquí
         },
       });
-      console.log(response.data);
       fetchProductos();
+      return response.data;
     } catch (error) {
-      console.error('Error al realizar la salida particular:', error);
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        console.log(error);
+        throw { message: 'Producto no encontrado', statusCode: 404 };
+      }
+      if (axios.isAxiosError(error) && error.response?.status === 400) {
+        console.log(error);
+        throw { message: 'La cantidad en inventario es muy baja', statusCode: 409 };
+      } else {
+        throw { message: 'Error al realizar la salida', statusCode: 500 };
+      }
     }
   };
 
@@ -518,10 +538,14 @@ const Home: React.FC = () => {
           Authorization: `Bearer ${token}`,
         },
       });
-      console.log(response.data);
       fetchProductos();
+      return response.data;
     } catch (error) {
-      console.error('Error al ingresar producto:', error);
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        throw { message: 'El producto con este código ya existe', statusCode: 404 };
+      } else {
+        throw { message: 'Error al registrar el producto', statusCode: 500 };
+      }
     }
   };
 
@@ -539,10 +563,10 @@ const Home: React.FC = () => {
           Authorization: `Bearer ${token}`,
         },
       });
-      console.log(response.data);
       fetchUbicaciones();
+      return response.data;
     } catch (error) {
-      console.error('Error al ingresar la ubicacion:', error);
+      throw { message: 'Error al realizar la acción', statusCode: 500 };
     }
   };
 
@@ -563,7 +587,29 @@ const Home: React.FC = () => {
       console.log(response.data);
       fetchDepartamentos();
     } catch (error) {
-      console.error('Error al ingresar el departamento:', error);
+      throw { message: 'Error al realizar la acción', statusCode: 500 };
+    }
+  };
+
+  //mostrar productos en cantidad minima
+  const cantidadMinima = async () => {
+    try {
+      const response = await axios.get('http://localhost:3000/productos/cantidad-minima', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setProductos(response.data);
+      setShowSalidas(false);
+      setShowEntradas(false);
+      setShowDevoluciones(false);
+      setShowSalidasParticulares(false);
+      setShowUbicaciones(false);
+      setShowDepartamentos(false);
+      setShowBitacora(false);
+      setShowProductos(true);
+    } catch (error) {
+      console.error('Error fetching productos:', error);
     }
   };
 
@@ -625,8 +671,11 @@ const Home: React.FC = () => {
           <img src={PanasonicLogo} alt="Panasonic Logo" className="logo img" />
         </div>
         <div className="user-info">
-          <h3 className="welcome-message">{usuarioNombre}</h3>
+          <h3 className="user-name">{usuarioNombre}</h3>
           <button onClick={handleLogout} className="logout-button">Logout</button>
+        </div>
+        <div className="menu-title">
+          <h3>Menú Principal</h3>
         </div>
         <nav className="main-menu">
           <ul>
@@ -835,6 +884,7 @@ const Home: React.FC = () => {
                   <button className="add-product-button" onClick={() => setIsProductoModalOpen(true)}>Agregar Producto Nuevo</button>
                   <button className="add-product-button" onClick={() => setIsDevolucionModalOpen(true)}>Devolución</button>
                   <button className="add-product-button" onClick={() => setIsSalidaParticularModalOpen(true)}>Salida Particular</button>
+                  <button className="add-product-button" style={{ backgroundColor: '#7a2a20', color: 'white' }} onClick={() => cantidadMinima()}>Inventario Minimo</button>
                 </div>
                 <div className="product-grid">
                   {filteredProductos.map((producto) => (

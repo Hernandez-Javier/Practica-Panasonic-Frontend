@@ -110,3 +110,14 @@
   background-color: rgba(0, 0, 0, 0.75); /* Fondo oscuro para el overlay */
   z-index: 2000; /* Z-index del overlay del modal */
 }
+
+.error-message {
+  color: rgba(0, 0, 0, 0.75); /* Color rojo para el texto */
+  background-color: #FFBABA; /* Color de fondo suave */
+  border: 1px solid #D8000C; /* Borde rojo */
+  padding: 10px; /* Espaciado interno */
+  border-radius: 5px; /* Bordes redondeados */
+  margin: 10px 0; /* Espaciado externo */
+  font-weight: bold; /* Texto en negrita */
+  text-align: center; /* Centrar el texto */
+}

@@ -10,7 +10,7 @@ Modal.setAppElement('#root');
 interface ModalSalidaProps {
   isOpen: boolean;
   onRequestClose: () => void;
-  onSubmit: (codigo: string, cantidad: number, destino:string, solicitante:string) => void;
+  onSubmit: (codigo: string, cantidad: number, destino:string, solicitante:string) => Promise<void>;
   codigoProducto: string; // prop para el código del producto
   nombreProducto: string; // prop para el nombre del producto
 }
@@ -22,22 +22,25 @@ const ModalSalida: React.FC<ModalSalidaProps> = ({ isOpen, onRequestClose, onSub
   const [solicitante, setSolicitante] = useState('');
   const [nombre, setNombre] = useState('');
   const [departamentos, setDepartamentos] = useState<{ id: string, nombre: string, descripcion: string }[]>([]);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   // Actualizar el estado interno cuando cambian los props
-  React.useEffect(() => {
+  useEffect(() => {
     if (isOpen) {
       setCodigo(codigoProducto);
       setNombre(nombreProducto);
-    }
-  }, [isOpen, codigoProducto, nombreProducto]);
-
-  useEffect(() => {
-    if (isOpen) {
       fetchDepartamentos();
     }
-  }, [isOpen]);
-
+    if (!isOpen) {
+      setCodigo('');
+      setCantidad(0);
+      setDestino('');
+      setSolicitante('');
+      setNombre('');
+      setDepartamentos([]);
+      setError(null);
+    }
+  }, [isOpen, codigoProducto, nombreProducto]);
 
   const fetchDepartamentos = async () => {
     try {
@@ -52,19 +55,45 @@ const ModalSalida: React.FC<ModalSalidaProps> = ({ isOpen, onRequestClose, onSub
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async(e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(codigo, cantidad, destino, solicitante);
-    setCodigo('');
-    setCantidad(0);
-    setDestino('');
-    setSolicitante('');
-    onRequestClose();
+
+    // Validar que todos los campos estén llenos
+    if (!codigo.trim() || cantidad === 0 || !destino.trim() || !solicitante.trim()) {
+      setError('Por favor complete todos los campos.');
+      return;
+    }
+
+    try {
+      await onSubmit(codigo, cantidad, destino, solicitante);
+      setCodigo('');
+      setCantidad(0);
+      setDestino('');
+      setSolicitante('');
+
+      // Cerrar el modal después de la operación exitosa
+      onRequestClose();
+    } catch (error: any) {
+      if (error.message) {
+        setError(error.message);
+      }
+    }
+  };
+
+  const handleCantidadChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCantidad(Number(e.target.value));
+    setError(null); // Limpiar el mensaje de error al cambiar la cantidad
+  };
+
+  const handleSolicitanteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSolicitante(e.target.value);
+    setError(null); // Limpiar el mensaje de error al cambiar el solicitante
   };
 
   return (
     <Modal isOpen={isOpen} onRequestClose={onRequestClose} contentLabel="Salida de Inventario"  className="modal-content">
       <h2>Salida de Inventario</h2>
+      {error && <p className="error-message">{error}</p>}
       <form onSubmit={handleSubmit}>
         <label>
           Código del Producto:
@@ -76,7 +105,7 @@ const ModalSalida: React.FC<ModalSalidaProps> = ({ isOpen, onRequestClose, onSub
         </label>
         <label>
           Cantidad:
-          <input type="number" value={cantidad} onChange={(e) => setCantidad(Number(e.target.value))} />
+          <input type="number" value={cantidad} onChange={handleCantidadChange} />
         </label>
         <label>
           Destino:
@@ -90,7 +119,7 @@ const ModalSalida: React.FC<ModalSalidaProps> = ({ isOpen, onRequestClose, onSub
         </label>
         <label>
           Solicitante:
-          <input type="text" value={solicitante} onChange={(e) => setSolicitante(e.target.value)} />
+          <input type="text" value={solicitante} onChange={handleSolicitanteChange} />
         </label>
         <button type="submit">Registrar Salida</button>
       </form>
