@@ -2,6 +2,8 @@ import React, { useEffect, useState, ChangeEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {jwtDecode} from 'jwt-decode';
 import { format } from 'date-fns';
+import { Bar } from 'react-chartjs-2';
+import { Chart } from 'chart.js/auto';
 import axios from 'axios';
 import '../styles/home.css';
 import '../styles/report.css';
@@ -56,24 +58,25 @@ const Home: React.FC = () => {
   const [salidas, setSalidas] = useState<any[]>([]);//estado para las salidas
   const [showSalidas, setShowSalidas] = useState(false);//estado para mostrar las salidas
   const [devoluciones, setDevoluciones] = useState<any[]>([]);//estado para las devoluciones
-  const [showDevoluciones, setShowDevoluciones] = useState(false);//estado par mostrar udevoluciones
   const [salidasParticulares, setSalidasParticulares] = useState<any[]>([]);//estado para las devoluciones
-  const [showSalidasParticulares, setShowSalidasParticulares] = useState(false);//estado par mostrar ubicaciones
   const [ubicaciones, setUbicaciones] = useState<any[]>([]);//estado para las ubicaciones
-  const [showUbicaciones, setShowUbicaciones] = useState(false);//estado par mostrar ubicaciones
   const [departamentos, setDepartamentos] = useState<any[]>([]);//estado para los departamentos
-  const [showDepartamentos, setShowDepartamentos] = useState(false);//estado par mostrar departamentos
   const [bitacora, setBitacora] = useState<any[]>([]);//estado para la bitacora
-  const [showBitacora, setShowBitacora] = useState(false);//estado para mostrar la bitacora
   const [error, setError] = useState('');
-  const [codigoProducto, setCodigoProducto] = useState('');
-  const [nombreProducto, setNombreProducto] = useState('');
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState(''); //guarda la categoria actual para que se muestre al usuario
   // Estados para los filtros de fecha
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
   const [selectedDepartamento, setSelectedDepartamento] = useState<string>('');
+  const [totalUSD, setTotalUSD] = useState(0);
+  const [totalCRC, setTotalCRC] = useState(0);
+  const [reportEntrada, setReportEntrada] = useState<ReportData[]>([]);
+  const [totalUSDS, setTotalUSDS] = useState(0);
+  const [totalCRCS, setTotalCRCS] = useState(0);
+  const [reportSalida, setReportSalida] = useState<ReportData[]>([]);
+  //grafico
+  const [topDepartamentosData, setTopDepartamentosData] = useState<{ departamentos: string[], cantidades: number[] }>({ departamentos: [], cantidades: [] });
 
 
   const navigate = useNavigate();
@@ -82,14 +85,16 @@ const Home: React.FC = () => {
   let usuarioNombre = 'Usuario';
 
   useEffect(() => {
-    if (!token) {
-      navigate('/'); // Redirigir al login si no hay token
-    } else {
       fetchProductos();
       fetchDepartamentos();
       setActiveCategory('productos');
-    }
-  }, [token, navigate]);
+  }, []);
+
+  useEffect(() => {
+    if (!token) {
+      navigate('/')
+    }; // Redirigir al login si no hay token
+  }, [token]);
 
   if (token) {
     try {
@@ -99,10 +104,6 @@ const Home: React.FC = () => {
       console.error('Error decodificando el token:', error);
     }
   }
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-  };
 
   // Manejar cambios en los filtros de fecha
   const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -125,11 +126,6 @@ const Home: React.FC = () => {
       setProductos(response.data);
       setShowSalidas(false);
       setShowEntradas(false);
-      setShowDevoluciones(false);
-      setShowSalidasParticulares(false);
-      setShowUbicaciones(false);
-      setShowDepartamentos(false);
-      setShowBitacora(false);
       setShowProductos(true);
     } catch (error) {
       console.error('Error fetching productos:', error);
@@ -147,11 +143,6 @@ const Home: React.FC = () => {
       setEntradas(response.data);
       setShowSalidas(false);
       setShowProductos(false);
-      setShowDevoluciones(false);
-      setShowSalidasParticulares(false);
-      setShowUbicaciones(false);
-      setShowDepartamentos(false);
-      setShowBitacora(false);
       setShowEntradas(true);
     } catch (error) {
       console.error('Error fetching entradas:', error);
@@ -169,56 +160,7 @@ const Home: React.FC = () => {
       setSalidas(response.data);
       setShowProductos(false);
       setShowEntradas(false);
-      setShowDevoluciones(false);
-      setShowSalidasParticulares(false);
-      setShowUbicaciones(false);
-      setShowDepartamentos(false);
-      setShowBitacora(false);
       setShowSalidas(true);
-    } catch (error) {
-      console.error('Error fetching salidas:', error);
-    }
-  };
-
-  //mostrar devoluciones
-  const fetchDevoluciones = async () => {
-    try {
-      const response = await axios.get('http://localhost:3000/devoluciones/all', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setDevoluciones(response.data);
-      setShowProductos(false);
-      setShowEntradas(false);
-      setShowSalidas(false);
-      setShowSalidasParticulares(false);
-      setShowUbicaciones(false);
-      setShowDepartamentos(false);
-      setShowBitacora(false);
-      setShowDevoluciones(true);
-    } catch (error) {
-      console.error('Error fetching salidas:', error);
-    }
-  };
-
-  //mostrar salidas particulares
-  const fetchSalidasParticulares = async () => {
-    try {
-      const response = await axios.get('http://localhost:3000/salidas-particulares/all', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setSalidasParticulares(response.data);
-      setShowProductos(false);
-      setShowEntradas(false);
-      setShowSalidas(false);
-      setShowDevoluciones(false);
-      setShowUbicaciones(false);
-      setShowDepartamentos(false);
-      setShowBitacora(false);
-      setShowSalidasParticulares(true);
     } catch (error) {
       console.error('Error fetching salidas:', error);
     }
@@ -233,14 +175,6 @@ const Home: React.FC = () => {
         },
       });
       setUbicaciones(response.data);
-      setShowProductos(false);
-      setShowEntradas(false);
-      setShowSalidas(false);
-      setShowDevoluciones(false);
-      setShowSalidasParticulares(false);
-      setShowDepartamentos(false);
-      setShowBitacora(false);
-      setShowUbicaciones(true);
     } catch (error) {
       console.error('Error fetching salidas:', error);
     }
@@ -255,14 +189,6 @@ const Home: React.FC = () => {
         },
       });
       setDepartamentos(response.data);
-      setShowProductos(false);
-      setShowEntradas(false);
-      setShowSalidas(false);
-      setShowDevoluciones(false);
-      setShowSalidasParticulares(false);
-      setShowUbicaciones(false);
-      setShowBitacora(false);
-      setShowDepartamentos(true);
     } catch (error) {
       console.error('Error fetching salidas:', error);
     }
@@ -277,14 +203,6 @@ const Home: React.FC = () => {
         },
       });
       setBitacora(response.data);
-      setShowProductos(false);
-      setShowEntradas(false);
-      setShowSalidas(false);
-      setShowDevoluciones(false);
-      setShowSalidasParticulares(false);
-      setShowUbicaciones(false);
-      setShowDepartamentos(false);
-      setShowBitacora(true);
     } catch (error) {
       console.error('Error fetching salidas:', error);
     }
@@ -301,11 +219,6 @@ const Home: React.FC = () => {
       setProductos(response.data);
       setShowSalidas(false);
       setShowEntradas(false);
-      setShowDevoluciones(false);
-      setShowSalidasParticulares(false);
-      setShowUbicaciones(false);
-      setShowDepartamentos(false);
-      setShowBitacora(false);
       setShowProductos(true);
     } catch (error) {
       console.error('Error fetching productos:', error);
@@ -327,32 +240,11 @@ const Home: React.FC = () => {
   };
 
   //filtros para busquedas
-  
-  const filteredDevoluciones = devoluciones.filter(devolucion =>
-    devolucion.codigoproducto.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-  
-  const filteredSalidasParticulares = salidasParticulares.filter(salidaParticular =>
-    salidaParticular.codigoproducto.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   const filteredProductos = productos.filter(producto =>
     producto.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
     producto.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
     producto.descripcion.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const filteredUbicaciones = ubicaciones.filter(ubicacion =>
-    ubicacion.nombre.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const filteredDepartamentos = departamentos.filter(departamento =>
-    departamento.nombre.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const filteredBitacora = bitacora.filter(bit =>
-    bit.tipoactividad.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    bit.responsable.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   //*****************************/
@@ -381,7 +273,7 @@ const Home: React.FC = () => {
     return dateFilter && departamentoFilter;
   });
 
-  const filteredEntradas = entradas.filter((entrada) => {
+  const filteredEntradas =  entradas.filter((entrada) => {
     const entradaDate = new Date(entrada.fecha);
     let startDateObj = null;
     let endDateObj = null;
@@ -406,40 +298,58 @@ const Home: React.FC = () => {
     return dateFilter;
   });
 
-  const handleFilterByDepartamento = (departamento: string) => {
-    setSalidas(filteredSalidas.filter((salida) => salida.departamento === departamento));
-  };
-  
-  const handleDepartamentoChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedDepartamento(e.target.value);
-  };
+  useEffect(() => {
+    const { reportData:reportSalida, totalColonesGlobal2, totalDolaresGlobal2 } = calculateReportSalida(filteredSalidas);
+    setReportSalida(reportSalida);
+    setTotalCRCS(totalColonesGlobal2);
+    setTotalUSDS(totalDolaresGlobal2);
 
-  const calculateReportSalida = (salidas: Salida[]): ReportData[] => {
+    const { reportData:reportEntrada, totalColonesGlobal, totalDolaresGlobal } = calculateReportEntrada(filteredEntradas);
+    setReportEntrada(reportEntrada);
+    setTotalCRC(totalColonesGlobal);
+    setTotalUSD(totalDolaresGlobal);
+
+    //const topDepartamentos = calculateTopDepartamentos(filteredSalidas);
+    //setTopDepartamentosData(topDepartamentos);
+  }, [filteredEntradas, filteredSalidas]);
+
+  const calculateReportSalida = (salidas: Salida[]): { reportData: ReportData[], totalColonesGlobal2: number, totalDolaresGlobal2: number } => {
     const reportData: { [key: string]: ReportData } = {};
+    let totalColonesGlobal2 = 0;
+    let totalDolaresGlobal2 = 0;
 
     salidas.forEach((salida) => {
-      const producto = productos.find(p => p.codigo === salida.codigoproducto);
-      if (!producto) return;
+        const producto = productos.find(p => p.codigo === salida.codigoproducto);
+        if (!producto) return;
 
-      if (!reportData[salida.codigoproducto]) {
-        reportData[salida.codigoproducto] = {
-          codigo: salida.codigoproducto,
-          nombre: producto.nombre,
-          cantidadTotal: 0,
-          totalColones: 0,
-          totalDolares: 0,
-        };
-      }
-      reportData[salida.codigoproducto].cantidadTotal += salida.cantidad;
-      reportData[salida.codigoproducto].totalColones += salida.cantidad * producto.preciounidadcol;
-      reportData[salida.codigoproducto].totalDolares += salida.cantidad * producto.preciounidadusd;
+        if (!reportData[salida.codigoproducto]) {
+            reportData[salida.codigoproducto] = {
+                codigo: salida.codigoproducto,
+                nombre: producto.nombre,
+                cantidadTotal: 0,
+                totalColones: 0,
+                totalDolares: 0,
+            };
+        }
+        reportData[salida.codigoproducto].cantidadTotal += salida.cantidad;
+        reportData[salida.codigoproducto].totalColones += salida.cantidad * producto.preciounidadcol;
+        reportData[salida.codigoproducto].totalDolares += salida.cantidad * producto.preciounidadusd;
+
+        totalColonesGlobal2 += salida.cantidad * producto.preciounidadcol;
+        totalDolaresGlobal2 += salida.cantidad * producto.preciounidadusd;
     });
 
-    return Object.values(reportData);
+    return {
+        reportData: Object.values(reportData),
+        totalColonesGlobal2,
+        totalDolaresGlobal2
+    };
   };
 
-  const calculateReportEntrada = (entradas: Entrada[]): ReportData[] => {
+  const calculateReportEntrada = (entradas: Entrada[]): {reportData: ReportData[], totalColonesGlobal: number, totalDolaresGlobal: number } => {
     const reportData: { [key: string]: ReportData } = {};
+    let totalColonesGlobal = 0;
+    let totalDolaresGlobal = 0;
 
     entradas.forEach((entrada) => {
       const producto = productos.find(p => p.codigo === entrada.codigoproducto);
@@ -457,14 +367,38 @@ const Home: React.FC = () => {
       reportData[entrada.codigoproducto].cantidadTotal += entrada.cantidad;
       reportData[entrada.codigoproducto].totalColones += entrada.cantidad * producto.preciounidadcol;
       reportData[entrada.codigoproducto].totalDolares += entrada.cantidad * producto.preciounidadusd;
-    });
 
-    return Object.values(reportData);
+      totalColonesGlobal += entrada.cantidad * producto.preciounidadcol;
+      totalDolaresGlobal += entrada.cantidad * producto.preciounidadusd;
+    });
+    return {
+      reportData: Object.values(reportData),
+      totalColonesGlobal,
+      totalDolaresGlobal
+    };
   };
 
-  const reportSalida = calculateReportSalida(filteredSalidas);
 
-  const reportentrada = calculateReportEntrada(filteredEntradas);
+  //calcula los departamentos para el grafico
+  const calculateTopDepartamentos = (salidas: Salida[]): { departamentos: string[], cantidades: number[] } => {
+    const departamentoCount: { [key: string]: number } = {};
+  
+    salidas.forEach((salida) => {
+      if (!departamentoCount[salida.destino]) {
+        departamentoCount[salida.destino] = 0;
+      }
+      departamentoCount[salida.destino] += salida.cantidad;
+    });
+  
+    const sortedDepartamentos = Object.entries(departamentoCount).sort((a, b) => b[1] - a[1]);
+    const topDepartamentos = sortedDepartamentos.slice(0, 5);
+  
+    return {
+      departamentos: topDepartamentos.map(item => item[0]),
+      cantidades: topDepartamentos.map(item => item[1])
+    };
+  };
+  
 
   return (
     <div className="dashboard">
@@ -511,7 +445,7 @@ const Home: React.FC = () => {
           {showEntradas ? (
             filteredEntradas.length > 0 ? (
               <>
-              {reportentrada.length > 0 ? (
+              {reportEntrada.length > 0 ? (
                 <>
                   <h2>Reporte de Entradas</h2>
                   <table className="report-table">
@@ -525,7 +459,7 @@ const Home: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {reportentrada.map((data) => (
+                      {reportEntrada.map((data) => (
                         <tr key={data.codigo}>
                           <td>{data.codigo}</td>
                           <td>{data.nombre}</td>
@@ -534,11 +468,16 @@ const Home: React.FC = () => {
                           <td>{data.totalDolares.toFixed(2)}</td>
                         </tr>
                       ))}
+                      <tr>
+                        <td colSpan={3} style={{ textAlign: 'right', fontWeight: 'bold' }}>Totales Globales:</td>
+                        <td style={{ fontWeight: 'bold' }}>{totalCRC.toFixed(2)}</td>
+                        <td style={{ fontWeight: 'bold' }}>{totalUSD.toFixed(2)}</td>
+                      </tr>
                     </tbody>
                   </table>
                 </>
               ) : (
-                <p>No hay salidas disponibles.</p>
+                <p>No hay entradas disponibles.</p>
               )}
               <h2>Entradas</h2>
               <div className="product-grid">
@@ -586,8 +525,14 @@ const Home: React.FC = () => {
                           <td>{data.totalDolares.toFixed(2)}</td>
                         </tr>
                       ))}
+                      <tr>
+                        <td colSpan={3} style={{ textAlign: 'right', fontWeight: 'bold' }}>Totales Globales:</td>
+                        <td style={{ fontWeight: 'bold' }}>{totalCRCS.toFixed(2)}</td>
+                        <td style={{ fontWeight: 'bold' }}>{totalUSDS.toFixed(2)}</td>
+                      </tr>
                     </tbody>
                   </table>
+                  
                 </>
               ) : (
                 <p>No hay salidas disponibles.</p>
@@ -613,46 +558,6 @@ const Home: React.FC = () => {
               </>
             ) : (
               <p>No hay salidas disponibles.</p>
-            )
-          ) : showDevoluciones ? (
-            filteredDevoluciones.length > 0 ? (
-              <div className="product-grid">
-                {filteredDevoluciones.map((devolucion) => (
-                  <div key={devolucion.id} className="product-item">
-                    <div className="product-column">
-                      <p><strong>Código:</strong> {devolucion.codigoproducto}</p>
-                      <p><strong>Cantidad:</strong> {devolucion.cantidad}</p>
-                      <p><strong>Fecha:</strong> {formatDate(devolucion.fecha)}</p>
-                    </div>
-                    <div className="product-column">
-                      <p><strong>Motivo:</strong> {devolucion.motivo}</p>
-                      <p><strong>Responsable:</strong> {devolucion.responsable}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p>No hay devoluciones disponibles.</p>
-            )
-          ) : showSalidasParticulares ? (
-            filteredSalidasParticulares.length > 0 ? (
-              <div className="product-grid">
-                {filteredSalidasParticulares.map((salidaParticular) => (
-                  <div key={salidaParticular.id} className="product-item">
-                    <div className="product-column">
-                      <p><strong>Código:</strong> {salidaParticular.codigoproducto}</p>
-                      <p><strong>Cantidad:</strong> {salidaParticular.cantidad}</p>
-                      <p><strong>Motivo:</strong> {salidaParticular.motivo}</p>
-                    </div>
-                    <div className="product-column">
-                      <p><strong>Responsable:</strong> {salidaParticular.responsable}</p>
-                      <p><strong>Fecha:</strong> {formatDate(salidaParticular.fecha)}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p>No hay salidas particulares disponibles.</p>
             )
           ) : (
             filteredProductos.length > 0 ? (

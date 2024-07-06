@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import Modal from 'react-modal';
+import axios from 'axios';
 import '../styles/modalES.css';
+
+const token = localStorage.getItem('token');
 
 Modal.setAppElement('#root');
 
@@ -31,7 +34,7 @@ interface ModalEditarProps {
   categoria: string;
 }
 
-const ModalEditar: React.FC<ModalEditarProps> = ({ 
+const ModalEditar: React.FC<ModalEditarProps> = ({
   isOpen, 
   onRequestClose, 
   onSubmit, 
@@ -59,8 +62,24 @@ const ModalEditar: React.FC<ModalEditarProps> = ({
     categoria,
   });
 
+  const [ubicaciones, setUbicaciones] = useState<{ id: string; nombre: string; descripcion: string }[]>([]);
+
+  const fetchUbicaciones = async () => {
+    try {
+      const response = await axios.get('http://localhost:3000/ubicaciones/all', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setUbicaciones(response.data);
+    } catch (error) {
+      console.error('Error fetching ubicaciones:', error);
+    }
+  };
+
   useEffect(() => {
     if (isOpen) {
+      fetchUbicaciones();
       setFormData({
         codigo,
         nombre,
@@ -89,6 +108,13 @@ const ModalEditar: React.FC<ModalEditarProps> = ({
     setFormData({
       ...formData,
       [name]: value,
+    });
+  };
+
+  const handleChangeSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setFormData({
+      ...formData,
+      ubicacion: e.target.value,
     });
   };
 
@@ -127,7 +153,13 @@ const ModalEditar: React.FC<ModalEditarProps> = ({
         </label>
         <label>
           Ubicación:
-          <input type="text" name="ubicacion" value={formData.ubicacion} onChange={handleChange} />
+          <select name="ubicacion" value={formData.ubicacion} onChange={handleChangeSelect}>
+            {ubicaciones.map((ubica) => (
+              <option key={ubica.id} value={ubica.nombre}>
+                {ubica.nombre}
+              </option>
+            ))}
+          </select>
         </label>
         <label>
           Proveedor:
@@ -160,4 +192,3 @@ const ModalEditar: React.FC<ModalEditarProps> = ({
 };
 
 export default ModalEditar;
-

@@ -13,6 +13,8 @@ import ModalSalidaparticular from './SalidaParticular';
 import ModalUbicacion from './Ubicacion'; // Importar el componente CRUD de Ubicaciones
 import ModalDepartamento from './Departamento';
 import ModalEditar from './EditProducto';
+import ModalUsuario from './Usuario';
+import ModalEditUsuario from './EditUsuario';
 
 interface Producto {
   id: number;
@@ -26,6 +28,13 @@ interface Producto {
   preciounidadcol: number;
   preciounidadusd: number;
   categoria: string;
+}
+
+interface Usuario {
+  identificacion: string;
+  nombre: string;
+  email: string;
+  rol: string;
 }
 
 const Home: React.FC = () => {
@@ -45,9 +54,13 @@ const Home: React.FC = () => {
   const [showDepartamentos, setShowDepartamentos] = useState(false);//estado par mostrar departamentos
   const [bitacora, setBitacora] = useState<any[]>([]);//estado para la bitacora
   const [showBitacora, setShowBitacora] = useState(false);//estado para mostrar la bitacora
+  const [usuarios, setUsuarios] = useState<any[]>([]);//estado para la bitacora
+  const [showUsuarios, setShowUsuarios] = useState(false);//estado para mostrar la bitacora
   const [error, setError] = useState('');
   const [isProductoModalOpen, setIsProductoModalOpen] = useState(false);
+  const [isUsuarioModalOpen, setIsUsuarioModalOpen] = useState(false);
   const [isEditarProductoModalOpen, setIsEditarProductoModalOpen] = useState(false);
+  const [isEditarUsuarioModalOpen, setIsEditarUsuarioModalOpen] = useState(false);
   const [isEntradaModalOpen, setIsEntradaModalOpen] = useState(false);
   const [isSalidaModalOpen, setIsSalidaModalOpen] = useState(false);
   const [isDevolucionModalOpen, setIsDevolucionModalOpen] = useState(false);
@@ -57,6 +70,7 @@ const Home: React.FC = () => {
   const [codigoProducto, setCodigoProducto] = useState('');
   const [nombreProducto, setNombreProducto] = useState('');
   const [productoSeleccionado, setProductoSeleccionado] = useState<Producto | null>(null); // Estado para el producto seleccionado para editar
+  const [usuarioSeleccionado, setUsuarioSeleccionado] = useState<Usuario | null>(null); // Estado para el producto seleccionado para editar
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState(''); //guarda la categoria actual para que se muestre al usuario
 
@@ -103,7 +117,31 @@ const Home: React.FC = () => {
       setShowUbicaciones(false);
       setShowDepartamentos(false);
       setShowBitacora(false);
+      setShowUsuarios(false);
       setShowProductos(true);
+    } catch (error) {
+      console.error('Error fetching productos:', error);
+    }
+  };
+
+  //mostrar usuarios
+  const fetchUsuarios = async () => {
+    try {
+      const response = await axios.get('http://localhost:3000/usuarios', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setUsuarios(response.data);
+      setShowSalidas(false);
+      setShowEntradas(false);
+      setShowDevoluciones(false);
+      setShowSalidasParticulares(false);
+      setShowUbicaciones(false);
+      setShowDepartamentos(false);
+      setShowBitacora(false);
+      setShowProductos(false);
+      setShowUsuarios(true);
     } catch (error) {
       console.error('Error fetching productos:', error);
     }
@@ -125,6 +163,7 @@ const Home: React.FC = () => {
       setShowUbicaciones(false);
       setShowDepartamentos(false);
       setShowBitacora(false);
+      setShowUsuarios(false);
       setShowEntradas(true);
     } catch (error) {
       console.error('Error fetching entradas:', error);
@@ -147,6 +186,7 @@ const Home: React.FC = () => {
       setShowUbicaciones(false);
       setShowDepartamentos(false);
       setShowBitacora(false);
+      setShowUsuarios(false);
       setShowSalidas(true);
     } catch (error) {
       console.error('Error fetching salidas:', error);
@@ -169,6 +209,7 @@ const Home: React.FC = () => {
       setShowUbicaciones(false);
       setShowDepartamentos(false);
       setShowBitacora(false);
+      setShowUsuarios(false);
       setShowDevoluciones(true);
     } catch (error) {
       console.error('Error fetching salidas:', error);
@@ -191,6 +232,7 @@ const Home: React.FC = () => {
       setShowUbicaciones(false);
       setShowDepartamentos(false);
       setShowBitacora(false);
+      setShowUsuarios(false);
       setShowSalidasParticulares(true);
     } catch (error) {
       console.error('Error fetching salidas:', error);
@@ -213,6 +255,7 @@ const Home: React.FC = () => {
       setShowSalidasParticulares(false);
       setShowDepartamentos(false);
       setShowBitacora(false);
+      setShowUsuarios(false);
       setShowUbicaciones(true);
     } catch (error) {
       console.error('Error fetching salidas:', error);
@@ -235,6 +278,7 @@ const Home: React.FC = () => {
       setShowSalidasParticulares(false);
       setShowUbicaciones(false);
       setShowBitacora(false);
+      setShowUsuarios(false);
       setShowDepartamentos(true);
     } catch (error) {
       console.error('Error fetching salidas:', error);
@@ -257,6 +301,7 @@ const Home: React.FC = () => {
       setShowSalidasParticulares(false);
       setShowUbicaciones(false);
       setShowDepartamentos(false);
+      setShowUsuarios(false);
       setShowBitacora(true);
     } catch (error) {
       console.error('Error fetching salidas:', error);
@@ -333,6 +378,29 @@ const Home: React.FC = () => {
     }
   };
 
+  //eliminar usuario
+  const handleDeleteUsuario = async (id: string) => {
+    if (!token) {
+      setError('Token de autorización no proporcionado');
+      return;
+    }
+
+    const confirmarEliminar = window.confirm("¿Deseas eliminar este usuario?");
+
+    if (confirmarEliminar) {
+      try {
+        await axios.delete(`http://localhost:3000/usuarios/eliminar/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+  
+        setUsuarios(usuarios.filter(usuario => usuario.id !== id));
+      } catch (error) {
+        console.error('Error eliminando el usuario', error);
+        setError('Error al eliminar el usuario');
+      }
+    }
+  };
+
   //abrir modal de entrada
   const handleOpenEntradaModal = (codigo: string, nombre: string) => {
     // Abre el modal de entrada y pasa el código y el nombre del producto al modal
@@ -353,6 +421,12 @@ const Home: React.FC = () => {
   const handleOpenEditarProductoModal = (producto: Producto) => {
     setProductoSeleccionado(producto);
     setIsEditarProductoModalOpen(true);
+  };
+
+  //abrir modal de edicion de usuario
+  const handleOpenEditarUsuarioModal = (usuario: Usuario) => {
+    setUsuarioSeleccionado(usuario);
+    setIsEditarUsuarioModalOpen(true);
   };
 
   //editar producto
@@ -393,6 +467,38 @@ const Home: React.FC = () => {
       setIsEditarProductoModalOpen(false);
     } catch (error) {
       console.error('Error al editar el producto:', error);
+    }
+  };
+
+  //editar usuario
+  const handleEditarUsuario = async (
+    identificacion: string,
+    nombre: string,
+    email: string,
+    rol: string,
+    contraseña: string
+  ) => {
+    try {
+      const response = await axios.put(
+        `http://localhost:3000/usuarios/modify/${identificacion}`,
+        {
+          identificacion,
+          nombre,
+          email,
+          rol,
+          contraseña
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      console.log(response.data);
+      fetchUsuarios();
+      setIsEditarProductoModalOpen(false);
+    } catch (error) {
+      console.error('Error al editar el usuario:', error);
     }
   };
   
@@ -591,6 +697,37 @@ const Home: React.FC = () => {
     }
   };
 
+  //agregar usuario
+  const handleUsuarioNuevo = async (
+    identificacion: string, 
+    nombre: string, 
+    email: string, 
+    rol: string, 
+    contraseña: string
+  ) => {
+    try {
+      const response = await axios.post('http://localhost:3000/usuarios', {
+        identificacion, 
+        nombre, 
+        email, 
+        rol, 
+        contraseña
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      fetchUsuarios();
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        throw { message: 'Un usuario con esta identificación o correo ya existe', statusCode: 404 };
+      } else {
+        throw { message: 'Error al registrar el usuario', statusCode: 500 };
+      }
+    }
+  };
+
   //mostrar productos en cantidad minima
   const cantidadMinima = async () => {
     try {
@@ -686,8 +823,9 @@ const Home: React.FC = () => {
             <li><Link to="#" className={activeCategory === 'devolucionees' ? 'active' : ''} onClick={() => {fetchDevoluciones(); setActiveCategory('devoluciones'); }}>Devoluciones</Link></li>
             <li><Link to="#" className={activeCategory === 'ubicaciones' ? 'active' : ''} onClick={() => {fetchUbicaciones(); setActiveCategory('ubicaciones'); }}>Ubicaciones</Link></li>
             <li><Link to="#" className={activeCategory === 'departamentos' ? 'active' : ''} onClick={() => {fetchDepartamentos(); setActiveCategory('departamentos'); }}>Departamentos</Link></li>
+            <li><Link to="#" className={activeCategory === 'usuarios' ? 'active' : ''} onClick={() => {fetchUsuarios(); setActiveCategory('usuarios'); }}>Usuarios</Link></li>
             <li><Link to="/reportes">Reportes</Link></li>
-            <li><Link to="#">Usuarios</Link></li>
+            <li><Link to="/upload">Cargar Datos</Link></li>
             <li><Link to="#" className={activeCategory === 'bitacora' ? 'active' : ''} onClick={() => {fetchBitacora(); setActiveCategory('bitacora'); }}>Bitácora de Actividad</Link></li>
           </ul>
         </nav>
@@ -702,6 +840,7 @@ const Home: React.FC = () => {
               showSalidasParticulares ? 'Lista de Salidas Particulares' :
               showBitacora ? 'Bitacora de Actividad' :
               showUbicaciones ? 'Lista de Ubicaciones' :
+              showUsuarios ? 'Lista de Usuarios' :
               showDepartamentos ? 'Lista de Departamentos' :
               'Lista de Productos'}
             </span>
@@ -823,6 +962,34 @@ const Home: React.FC = () => {
             ) : (
               <p>No hay salidas particulares disponibles.</p>
             )
+          ) : showUsuarios ? (
+            usuarios.length > 0 ? (
+              <>
+                <div className="contenedor-botones">
+                  <button className="add-product-button" onClick={() => setIsUsuarioModalOpen(true)}>Agregar Usuario</button>
+                </div>
+                <div className="product-grid">
+                  {usuarios.map((usuario) => (
+                    <div key={usuario.id} className="product-item">
+                      <div className="product-column">
+                        <p><strong>ID:</strong> {usuario.identificacion}</p>
+                        <p><strong>Nombre:</strong> {usuario.nombre}</p>
+                        <p><strong>Correo Electrónico:</strong> {usuario.email}</p>
+                        <p><strong>Rol:</strong> {usuario.rol}</p>
+                      </div>
+                      <div className="products-buttons-column">
+                        <div className="product-buttons">
+                          <button onClick={() => handleOpenEditarUsuarioModal(usuario)}>Modificar</button>
+                        </div>
+                        <button className="delete-product-button" onClick={() => handleDeleteUsuario(usuario.id)}>Eliminar</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <p>No hay usuarios disponibles.</p>
+            )
           ) : showUbicaciones ? (
               filteredUbicaciones.length > 0 ? (
                 <>
@@ -943,6 +1110,11 @@ const Home: React.FC = () => {
         onSubmit={handleProductoNuevo}
         onRequestClose={() => {setIsProductoModalOpen(false)}}
       />
+      <ModalUsuario
+        isOpen={isUsuarioModalOpen}
+        onSubmit={handleUsuarioNuevo}
+        onRequestClose={() => {setIsUsuarioModalOpen(false)}}
+      />
       <ModalDevolucion
         isOpen={isDevolucionModalOpen}
         onRequestClose={() => {setIsDevolucionModalOpen(false)}}
@@ -978,6 +1150,17 @@ const Home: React.FC = () => {
           precioUnidadCol={productoSeleccionado.preciounidadcol}
           precioUnidadUSD={productoSeleccionado.preciounidadusd}
           categoria={productoSeleccionado.categoria}
+        />
+      )}
+      {usuarioSeleccionado && (
+        <ModalEditUsuario
+          isOpen={isEditarUsuarioModalOpen}
+          onRequestClose={() => setIsEditarUsuarioModalOpen(false)}
+          onSubmit={handleEditarUsuario}
+          identificacion={usuarioSeleccionado.identificacion}
+          nombre={usuarioSeleccionado.nombre}
+          email={usuarioSeleccionado.email}
+          rol={usuarioSeleccionado.rol}
         />
       )}
     </div>

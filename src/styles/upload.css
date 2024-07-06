@@ -1,0 +1,73 @@
+/* FileUpload.css */
+.file-upload-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  border: 2px solid #007bff;
+  border-radius: 10px;
+  background-color: #f8f9fa;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.title {
+  margin-bottom: 20px;
+  font-size: 24px;
+  font-weight: bold;
+  color: #007bff;
+}
+
+.dropzone {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+  border: 2px dashed #007bff;
+  border-radius: 5px;
+  background-color: #e9ecef;
+  color: #495057;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s, border-color 0.3s;
+}
+
+.dropzone:hover {
+  background-color: #ced4da;
+  border-color: #0056b3;
+}
+
+.dropzone p {
+  margin: 0;
+}
+
+.back-button {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  text-decoration: none;
+  transition: background-color 0.3s;
+}
+
+.back-button:hover {
+  background-color: #0056b3;
+}
+
+@media (min-width: 576px) {
+  .dropzone {
+    font-size: 18px;
+    padding: 50px;
+  }
+}
+
+@media (min-width: 768px) {
+  .dropzone {
+    font-size: 20px;
+    padding: 60px;
+  }
+}
+
+  

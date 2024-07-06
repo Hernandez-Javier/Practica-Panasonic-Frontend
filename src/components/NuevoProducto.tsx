@@ -21,7 +21,7 @@ interface ModalProductoProps {
     precioUnidadCol: number,
     precioUnidadUSD: number,
     categoria: string
-  ) => Promise<void>; // Asegurarse de que onSubmit retorne una promesa
+  ) => Promise<void>;
 }
 
 const ModalProducto: React.FC<ModalProductoProps> = ({ isOpen, onRequestClose, onSubmit }) => {
