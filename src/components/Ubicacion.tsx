@@ -67,7 +67,7 @@ const ModalUbicacion: React.FC<ModalUbicacionProps> = ({ isOpen, onRequestClose,
           Descripción:
           <textarea value={descripcion} onChange={handleDescripcionChange} />
         </label>
-        <button type="submit">Registrar Entrada</button>
+        <button type="submit">Agregar</button>
       </form>
     </Modal>
   );

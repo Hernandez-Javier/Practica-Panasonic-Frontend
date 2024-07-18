@@ -155,7 +155,7 @@ const ModalProducto: React.FC<ModalProductoProps> = ({ isOpen, onRequestClose, o
           Ubicación:
           <select value={ubicacion} onChange={(e) => setUbicacion(e.target.value)}>
             {ubicaciones.map((ubica) => (
-              <option key={ubica.id} value={ubica.nombre}>
+              <option key={ubica.id} value={ubica.id}>
                 {ubica.nombre}
               </option>
             ))}

@@ -103,6 +103,7 @@ body {
 .main-menu a:hover, .main-menu ul li a.active {
   background-color: #436485;
   border-radius: 5px;
+  margin: 1px;
 }
 
 /* Estilos del contenido */

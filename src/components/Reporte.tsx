@@ -1,13 +1,15 @@
-import React, { useEffect, useState, ChangeEvent } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {jwtDecode} from 'jwt-decode';
 import { format } from 'date-fns';
 import { Bar } from 'react-chartjs-2';
-import { Chart } from 'chart.js/auto';
+import { Chart, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import axios from 'axios';
 import '../styles/home.css';
 import '../styles/report.css';
 import PanasonicLogo from '../images/logo-Panasonic.png';
+
+Chart.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 interface Producto {
   id: number;
@@ -50,6 +52,13 @@ interface ReportData {
   totalDolares: number;
 }
 
+interface ReportDataProducto {
+  ubicacion: string;
+  cantidadTotal: number;
+  totalColones: number;
+  totalDolares: number;
+}
+
 const Home: React.FC = () => {
   const [productos, setProductos] = useState<any[]>([]);
   const [showProductos, setShowProductos] = useState(false);//estado para mostrar los productos
@@ -61,22 +70,29 @@ const Home: React.FC = () => {
   const [salidasParticulares, setSalidasParticulares] = useState<any[]>([]);//estado para las devoluciones
   const [ubicaciones, setUbicaciones] = useState<any[]>([]);//estado para las ubicaciones
   const [departamentos, setDepartamentos] = useState<any[]>([]);//estado para los departamentos
-  const [bitacora, setBitacora] = useState<any[]>([]);//estado para la bitacora
   const [error, setError] = useState('');
-  const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState(''); //guarda la categoria actual para que se muestre al usuario
-  // Estados para los filtros de fecha
+  // Estados para los filtros de fecha y datos de las tablas
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
   const [selectedDepartamento, setSelectedDepartamento] = useState<string>('');
+  const [selectedUbicacion, setSelectedUbicacion] = useState<string>('');
+  const [totalCantidadE, settotalCantidadE] = useState(0);
   const [totalUSD, setTotalUSD] = useState(0);
   const [totalCRC, setTotalCRC] = useState(0);
   const [reportEntrada, setReportEntrada] = useState<ReportData[]>([]);
+  const [totalCantidadS, settotalCantidadS] = useState(0);
   const [totalUSDS, setTotalUSDS] = useState(0);
   const [totalCRCS, setTotalCRCS] = useState(0);
   const [reportSalida, setReportSalida] = useState<ReportData[]>([]);
+  const [totalUSDP, settotalUSDP] = useState(0);
+  const [totalCRCP, settotalCRCP] = useState(0);
+  const [totalCantidad, settotalCantidad] = useState(0);
+  const [reportProducto, setReportProducto] = useState<ReportDataProducto[]>([]);
   //grafico
-  const [topDepartamentosData, setTopDepartamentosData] = useState<{ departamentos: string[], cantidades: number[] }>({ departamentos: [], cantidades: [] });
+  const [showChartSalidas, setShowChartSalidas] = useState(false);
+  const [showChartEntradas, setShowChartEntradas] = useState(false);
+  const [showChartProductos, setShowChartProductos] = useState(false);
 
 
   const navigate = useNavigate();
@@ -87,6 +103,7 @@ const Home: React.FC = () => {
   useEffect(() => {
       fetchProductos();
       fetchDepartamentos();
+      fetchUbicaciones();
       setActiveCategory('productos');
   }, []);
 
@@ -114,7 +131,6 @@ const Home: React.FC = () => {
     setEndDate(e.target.value);
   };
 
-
   //mostrar productos
   const fetchProductos = async () => {
     try {
@@ -129,6 +145,7 @@ const Home: React.FC = () => {
       setShowProductos(true);
     } catch (error) {
       console.error('Error fetching productos:', error);
+      setError('Error fetching productos. Please try again later.');
     }
   };
 
@@ -194,20 +211,6 @@ const Home: React.FC = () => {
     }
   };
 
-  //mostrar bitacora
-  const fetchBitacora = async () => {
-    try {
-      const response = await axios.get('http://localhost:3000/bitacora/all', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setBitacora(response.data);
-    } catch (error) {
-      console.error('Error fetching salidas:', error);
-    }
-  };
-
   //mostrar productos en cantidad minima
   const cantidadMinima = async () => {
     try {
@@ -239,122 +242,132 @@ const Home: React.FC = () => {
     navigate('/');
   };
 
-  //filtros para busquedas
+  /*************** filtros par mostrar reportes **************/
+  const filteredProductos = productos.filter((producto) => {
+    const ubicacionFilter = !selectedUbicacion || producto.ubicacion === selectedUbicacion;
 
-  const filteredProductos = productos.filter(producto =>
-    producto.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    producto.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    producto.descripcion.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  //*****************************/
-  const filteredSalidas = salidas.filter((salida) => {
-    const salidaDate = new Date(salida.fecha);
-    let startDateObj = null;
-    let endDateObj = null;
-
-    // Convertir startDate y endDate a objetos Date si están definidos
-    if (startDate) {
-        startDateObj = new Date(startDate);
-    }
-    if (endDate) {
-        const endOfToday = new Date();
-        endOfToday.setHours(23, 59, 59, 999);
-        endDateObj = endOfToday;
-    }
-
-    // Filtrar por fechas
-    const dateFilter = (!startDateObj || salidaDate >= startDateObj) &&
-    (!endDateObj || salidaDate <= endDateObj);
-  
-    // Filtrar por departamento
-    const departamentoFilter = !selectedDepartamento || salida.destino === selectedDepartamento;
-
-    return dateFilter && departamentoFilter;
+    return ubicacionFilter;
   });
 
-  const filteredEntradas =  entradas.filter((entrada) => {
-    const entradaDate = new Date(entrada.fecha);
-    let startDateObj = null;
-    let endDateObj = null;
-
-    // Convertir startDate y endDate a objetos Date si están definidos
-    if (startDate) {
-        startDateObj = new Date(startDate);
-    }
-    if (endDate) {
-        const endOfToday = new Date();
-        endOfToday.setHours(23, 59, 59, 999);
-        endDateObj = endOfToday;
-    }
-
-    // Filtrar por fechas
-    const dateFilter = (!startDateObj || entradaDate >= startDateObj) &&
-    (!endDateObj || entradaDate <= endDateObj);
+  const filteredSalidas = salidas.filter((salida) => {
+    const salidaDate = new Date(salida.fecha);
+    let startDateObj = startDate ? new Date(startDate) : null;
+    let endDateObj = endDate ? new Date(endDate) : null;
   
-    // Filtrar por departamento
-    //const departamentoFilter = !selectedDepartamento || entrada.destino === selectedDepartamento;
-
+    const dateFilter = (!startDateObj || salidaDate >= startDateObj) &&
+      (!endDateObj || salidaDate <= endDateObj);
+  
+    const departamentoFilter = !selectedDepartamento || salida.destino === selectedDepartamento;
+  
+    return dateFilter && departamentoFilter;
+  });
+  
+  const filteredEntradas = entradas.filter((entrada) => {
+    const entradaDate = new Date(entrada.fecha);
+    let startDateObj = startDate ? new Date(startDate) : null;
+    let endDateObj = endDate ? new Date(endDate) : null;
+  
+    const dateFilter = (!startDateObj || entradaDate >= startDateObj) &&
+      (!endDateObj || entradaDate <= endDateObj);
+  
     return dateFilter;
   });
 
-  useEffect(() => {
-    const { reportData:reportSalida, totalColonesGlobal2, totalDolaresGlobal2 } = calculateReportSalida(filteredSalidas);
-    setReportSalida(reportSalida);
-    setTotalCRCS(totalColonesGlobal2);
-    setTotalUSDS(totalDolaresGlobal2);
+  const calculateReportProducto = (productos: Producto[]): { 
+    reportData: ReportDataProducto[], 
+    totalGlobalColones: number, 
+    totalGlobalDolares: number, 
+    totalGlobalCantidad: number 
+  } => {
+    const ubicacionesMap: { [key: string]: ReportDataProducto } = {};
+    let totalGlobalColones = 0;
+    let totalGlobalDolares = 0;
+    let totalGlobalCantidad = 0;
+  
+    productos.forEach((producto) => {
+      if (!ubicacionesMap[producto.ubicacion]) {
+        ubicacionesMap[producto.ubicacion] = {
+          ubicacion: producto.ubicacion,
+          cantidadTotal: 0,
+          totalColones: 0,
+          totalDolares: 0,
+        };
+      }
+  
+      ubicacionesMap[producto.ubicacion].cantidadTotal += producto.cantidad;
+      ubicacionesMap[producto.ubicacion].totalColones += producto.cantidad * producto.preciounidadcol;
+      ubicacionesMap[producto.ubicacion].totalDolares += producto.cantidad * producto.preciounidadusd;
+  
+      totalGlobalColones += producto.cantidad * producto.preciounidadcol;
+      totalGlobalDolares += producto.cantidad * producto.preciounidadusd;
+      totalGlobalCantidad += producto.cantidad;
+    });
+  
+    return {
+      reportData: Object.values(ubicacionesMap),
+      totalGlobalColones,
+      totalGlobalDolares,
+      totalGlobalCantidad
+    };
+  };
+  
 
-    const { reportData:reportEntrada, totalColonesGlobal, totalDolaresGlobal } = calculateReportEntrada(filteredEntradas);
-    setReportEntrada(reportEntrada);
-    setTotalCRC(totalColonesGlobal);
-    setTotalUSD(totalDolaresGlobal);
-
-    //const topDepartamentos = calculateTopDepartamentos(filteredSalidas);
-    //setTopDepartamentosData(topDepartamentos);
-  }, [filteredEntradas, filteredSalidas]);
-
-  const calculateReportSalida = (salidas: Salida[]): { reportData: ReportData[], totalColonesGlobal2: number, totalDolaresGlobal2: number } => {
+  const calculateReportSalida = (salidas: Salida[]): { 
+    reportData: ReportData[], 
+    totalColonesGlobal2: number, 
+    totalDolaresGlobal2: number,
+    totalGlobalCantidadSalida: number 
+  } => {
     const reportData: { [key: string]: ReportData } = {};
     let totalColonesGlobal2 = 0;
     let totalDolaresGlobal2 = 0;
-
+    let totalGlobalCantidadSalida = 0;
+  
     salidas.forEach((salida) => {
-        const producto = productos.find(p => p.codigo === salida.codigoproducto);
-        if (!producto) return;
-
-        if (!reportData[salida.codigoproducto]) {
-            reportData[salida.codigoproducto] = {
-                codigo: salida.codigoproducto,
-                nombre: producto.nombre,
-                cantidadTotal: 0,
-                totalColones: 0,
-                totalDolares: 0,
-            };
-        }
-        reportData[salida.codigoproducto].cantidadTotal += salida.cantidad;
-        reportData[salida.codigoproducto].totalColones += salida.cantidad * producto.preciounidadcol;
-        reportData[salida.codigoproducto].totalDolares += salida.cantidad * producto.preciounidadusd;
-
-        totalColonesGlobal2 += salida.cantidad * producto.preciounidadcol;
-        totalDolaresGlobal2 += salida.cantidad * producto.preciounidadusd;
+      const producto = productos.find(p => p.codigo === salida.codigoproducto);
+      if (!producto) return;
+  
+      if (!reportData[salida.codigoproducto]) {
+        reportData[salida.codigoproducto] = {
+          codigo: salida.codigoproducto,
+          nombre: producto.nombre,
+          cantidadTotal: 0,
+          totalColones: 0,
+          totalDolares: 0,
+        };
+      }
+      reportData[salida.codigoproducto].cantidadTotal += salida.cantidad;
+      reportData[salida.codigoproducto].totalColones += salida.cantidad * producto.preciounidadcol;
+      reportData[salida.codigoproducto].totalDolares += salida.cantidad * producto.preciounidadusd;
+  
+      totalColonesGlobal2 += salida.cantidad * producto.preciounidadcol;
+      totalDolaresGlobal2 += salida.cantidad * producto.preciounidadusd;
+      totalGlobalCantidadSalida += salida.cantidad;
     });
-
+  
     return {
-        reportData: Object.values(reportData),
-        totalColonesGlobal2,
-        totalDolaresGlobal2
+      reportData: Object.values(reportData),
+      totalColonesGlobal2,
+      totalDolaresGlobal2,
+      totalGlobalCantidadSalida
     };
   };
-
-  const calculateReportEntrada = (entradas: Entrada[]): {reportData: ReportData[], totalColonesGlobal: number, totalDolaresGlobal: number } => {
+  
+  const calculateReportEntrada = (entradas: Entrada[]): { 
+    reportData: ReportData[], 
+    totalColonesGlobal: number, 
+    totalDolaresGlobal: number,
+    totalGlobalCantidadEntrada: number 
+  } => {
     const reportData: { [key: string]: ReportData } = {};
     let totalColonesGlobal = 0;
     let totalDolaresGlobal = 0;
-
+    let totalGlobalCantidadEntrada = 0;
+  
     entradas.forEach((entrada) => {
       const producto = productos.find(p => p.codigo === entrada.codigoproducto);
       if (!producto) return;
-
+  
       if (!reportData[entrada.codigoproducto]) {
         reportData[entrada.codigoproducto] = {
           codigo: entrada.codigoproducto,
@@ -367,20 +380,90 @@ const Home: React.FC = () => {
       reportData[entrada.codigoproducto].cantidadTotal += entrada.cantidad;
       reportData[entrada.codigoproducto].totalColones += entrada.cantidad * producto.preciounidadcol;
       reportData[entrada.codigoproducto].totalDolares += entrada.cantidad * producto.preciounidadusd;
-
+  
       totalColonesGlobal += entrada.cantidad * producto.preciounidadcol;
       totalDolaresGlobal += entrada.cantidad * producto.preciounidadusd;
+      totalGlobalCantidadEntrada += entrada.cantidad;
     });
+  
     return {
       reportData: Object.values(reportData),
       totalColonesGlobal,
-      totalDolaresGlobal
+      totalDolaresGlobal,
+      totalGlobalCantidadEntrada
+    };
+  };
+  
+
+  const handleGenerateReport = () => {
+    setStartDate(startDate);
+    setEndDate(endDate);
+    setSelectedDepartamento(selectedDepartamento);
+    setSelectedUbicacion(selectedUbicacion);
+  
+    // Reporte de salidas
+    const { reportData: reportSalida, totalColonesGlobal2, totalDolaresGlobal2, totalGlobalCantidadSalida } = calculateReportSalida(filteredSalidas);
+    setReportSalida(reportSalida);
+    setTotalCRCS(totalColonesGlobal2);
+    setTotalUSDS(totalDolaresGlobal2);
+    settotalCantidadS(totalGlobalCantidadSalida);
+  
+    // Reporte de entradas
+    const { reportData: reportEntrada, totalColonesGlobal, totalDolaresGlobal, totalGlobalCantidadEntrada } = calculateReportEntrada(filteredEntradas);
+    setReportEntrada(reportEntrada);
+    setTotalCRC(totalColonesGlobal);
+    setTotalUSD(totalDolaresGlobal);
+    settotalCantidadE(totalGlobalCantidadEntrada);
+  
+    // Reporte de productos por ubicación
+    const { reportData: reportProductos, totalGlobalColones, totalGlobalDolares, totalGlobalCantidad } = calculateReportProducto(filteredProductos);
+    setReportProducto(reportProductos);
+    settotalCRCP(totalGlobalColones);
+    settotalUSDP(totalGlobalDolares);
+    settotalCantidad(totalGlobalCantidad);
+  };
+  
+  //calcula las ubicaciones top en productos para el grafico
+  const calculateTopUbicaciones = (productos: Producto[]): { topUbicaciones: string[], cantidadesU: number[] } => {
+    const ubicacionCount: { [key: string]: number } = {};
+    
+    productos.forEach((producto) => {
+      if (!ubicacionCount[producto.ubicacion]) {
+        ubicacionCount[producto.ubicacion] = 0;
+      }
+      ubicacionCount[producto.ubicacion] += producto.cantidad;
+    });
+    
+    const sortedUbicaciones = Object.entries(ubicacionCount).sort((a, b) => b[1] - a[1]);
+    const topUbicaciones = sortedUbicaciones.slice(0, 8);
+    console.log(topUbicaciones);
+    return {
+      topUbicaciones: topUbicaciones.map(item => item[0]),
+      cantidadesU: topUbicaciones.map(item => item[1])
+    };
+  };
+  
+  //calcula los productos top en entradas para el grafico
+  const calculateTopProductos = (entradas: Entrada[]): { topProductos: string[], cantidadesP: number[] } => {
+    const productoCount: { [key: string]: number } = {};
+    
+    entradas.forEach((entrada) => {
+      if (!productoCount[entrada.codigoproducto]) {
+        productoCount[entrada.codigoproducto] = 0;
+      }
+      productoCount[entrada.codigoproducto] += entrada.cantidad;
+    });
+    
+    const sortedProductos = Object.entries(productoCount).sort((a, b) => b[1] - a[1]);
+    const topProductos = sortedProductos.slice(0, 5);
+    return {
+      topProductos: topProductos.map(item => item[0]),
+      cantidadesP: topProductos.map(item => item[1])
     };
   };
 
-
-  //calcula los departamentos para el grafico
-  const calculateTopDepartamentos = (salidas: Salida[]): { departamentos: string[], cantidades: number[] } => {
+  //calcula los departamentos top en salidas para el grafico
+  const calculateTopDepartamentos = (salidas: Salida[]): { topDepartamentos: string[], cantidadesD: number[] } => {
     const departamentoCount: { [key: string]: number } = {};
   
     salidas.forEach((salida) => {
@@ -394,11 +477,63 @@ const Home: React.FC = () => {
     const topDepartamentos = sortedDepartamentos.slice(0, 5);
   
     return {
-      departamentos: topDepartamentos.map(item => item[0]),
-      cantidades: topDepartamentos.map(item => item[1])
+      topDepartamentos: topDepartamentos.map(item => item[0]),
+      cantidadesD: topDepartamentos.map(item => item[1])
     };
   };
-  
+
+  const { topDepartamentos, cantidadesD } = useMemo(() => calculateTopDepartamentos(filteredSalidas), [filteredSalidas]);
+  const { topProductos, cantidadesP } = useMemo(() => calculateTopProductos(filteredEntradas), [filteredEntradas]);
+  const { topUbicaciones, cantidadesU } = useMemo(() => calculateTopUbicaciones(productos), [productos]);
+
+  const dataProductosChart = {
+    labels: topUbicaciones,
+    datasets: [
+      {
+        label: 'Cantidad de Productos',
+        data: cantidadesU,
+        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+        borderColor: 'rgba(75, 192, 192, 1)',
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  const dataSalidasChart = {
+    labels: topDepartamentos,
+    datasets: [
+      {
+        label: 'Cantidad de Salidas',
+        data: cantidadesD,
+        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+        borderColor: 'rgba(75, 192, 192, 1)',
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  const dataEntradasChart = {
+    labels: topProductos,
+    datasets: [
+      {
+        label: 'Cantidad de Entradas',
+        data: cantidadesP,
+        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+        borderColor: 'rgba(75, 192, 192, 1)',
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  // Opciones del gráfico
+  const options = {
+    responsive: true,
+    scales: {
+      y: {
+        beginAtZero: true,
+      },
+    },
+  };
 
   return (
     <div className="dashboard">
@@ -427,20 +562,46 @@ const Home: React.FC = () => {
       <main className="content">
         <div className="product-list">
         <div className="filters">
-          <div>
-            <label>Desde: </label>
-            <input type="date" value={startDate} onChange={handleStartDateChange} />
-            <label>Hasta: </label>
-            <input type="date" value={endDate} onChange={handleEndDateChange} />
+          {(activeCategory === 'salidas' || activeCategory === 'entradas') && (
+            <div>
+              <label>Desde: </label>
+              <input type="date" value={startDate} onChange={handleStartDateChange} />
+              <label>Hasta: </label>
+              <input type="date" value={endDate} onChange={handleEndDateChange} />
+            </div>
+          )}
+          {activeCategory === 'salidas' && (
+            <select value={selectedDepartamento} onChange={(e) => setSelectedDepartamento(e.target.value)}>
+              <option value="">Todos los departamentos</option>
+              {departamentos.map((dep) => (
+                <option key={dep.id} value={dep.nombre}>
+                  {dep.nombre}
+                </option>
+              ))}
+            </select>
+          )}
+          {activeCategory === 'productos' && (
+            <select value={selectedUbicacion} onChange={(e) => setSelectedUbicacion(e.target.value)}>
+              <option value="">Todos las ubicaciones</option>
+              {ubicaciones.map((ubi) => (
+                <option key={ubi.id} value={ubi.nombre}>
+                  {ubi.nombre}
+                </option>
+              ))}
+            </select>
+          )}
+          <div className="contenedor-botones">
+            <button className="add-product-button" onClick={handleGenerateReport}>Generar Reporte</button>
+            {activeCategory === 'salidas' && (
+              <button className="add-product-button" onClick={()=>setShowChartSalidas(!showChartSalidas)}>Grafico Salidas por Departamentos</button>
+            )}
+            {activeCategory === 'entradas' && (
+              <button className="add-product-button" onClick={()=>setShowChartEntradas(!showChartEntradas)}>Grafico Entradas por Productos</button>
+            )}
+            {activeCategory === 'productos' && (
+              <button className="add-product-button" onClick={()=>setShowChartProductos(!showChartProductos)}>Grafico Productos por Ubicaciones</button>
+            )}
           </div>
-          <select value={selectedDepartamento} onChange={(e) => setSelectedDepartamento(e.target.value)}>
-            <option value="">Todos los departamentos</option>
-            {departamentos.map((dep) => (
-              <option key={dep.id} value={dep.nombre}>
-                {dep.nombre}
-              </option>
-            ))}
-          </select>
         </div>
           {showEntradas ? (
             filteredEntradas.length > 0 ? (
@@ -469,15 +630,19 @@ const Home: React.FC = () => {
                         </tr>
                       ))}
                       <tr>
-                        <td colSpan={3} style={{ textAlign: 'right', fontWeight: 'bold' }}>Totales Globales:</td>
+                        <td colSpan={2} style={{ textAlign: 'right', fontWeight: 'bold' }}>Totales Globales:</td>
+                        <td style={{ fontWeight: 'bold' }}>{totalCantidadE.toFixed(2)}</td>
                         <td style={{ fontWeight: 'bold' }}>{totalCRC.toFixed(2)}</td>
                         <td style={{ fontWeight: 'bold' }}>{totalUSD.toFixed(2)}</td>
                       </tr>
                     </tbody>
                   </table>
+                  {activeCategory === 'entradas' && showChartEntradas && (
+                    <Bar data={dataEntradasChart} options={options} />
+                  )}
                 </>
               ) : (
-                <p>No hay entradas disponibles.</p>
+                <p>Genera un reporte de entradas.</p>
               )}
               <h2>Entradas</h2>
               <div className="product-grid">
@@ -526,18 +691,20 @@ const Home: React.FC = () => {
                         </tr>
                       ))}
                       <tr>
-                        <td colSpan={3} style={{ textAlign: 'right', fontWeight: 'bold' }}>Totales Globales:</td>
+                        <td colSpan={2} style={{ textAlign: 'right', fontWeight: 'bold' }}>Totales Globales:</td>
+                        <td style={{ fontWeight: 'bold' }}>{totalCantidadS.toFixed(2)}</td>
                         <td style={{ fontWeight: 'bold' }}>{totalCRCS.toFixed(2)}</td>
                         <td style={{ fontWeight: 'bold' }}>{totalUSDS.toFixed(2)}</td>
                       </tr>
                     </tbody>
                   </table>
-                  
+                  {activeCategory === 'salidas' && showChartSalidas && (
+                    <Bar data={dataSalidasChart} options={options} />
+                  )}
                 </>
               ) : (
-                <p>No hay salidas disponibles.</p>
+                <p>Genera un reporte de salidas.</p>
               )}
-
                 <h2>Salidas</h2>
                 <div className="product-grid">
                   {filteredSalidas.map((salida) => (
@@ -562,9 +729,44 @@ const Home: React.FC = () => {
           ) : (
             filteredProductos.length > 0 ? (
               <>
-                <div className="contenedor-botones">
-                  <button className="add-product-button" style={{ backgroundColor: '#7a2a20', color: 'white' }} onClick={() => cantidadMinima()}>Inventario Minimo</button>
-                </div>
+              <div className="contenedor-botones">
+                <button className="add-product-button" style={{ backgroundColor: '#7a2a20', color: 'white' }} onClick={() => cantidadMinima()}>Inventario Minimo</button>
+              </div>
+              {reportProducto.length > 0 ? (
+                <>
+                <table className="report-table">
+                  <thead>
+                    <tr>
+                      <th>Ubicación</th>
+                      <th>Cantidad Total de Productos</th>
+                      <th>Total en Colones</th>
+                      <th>Total en Dólares</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {reportProducto.map((datos) => (
+                      <tr key={datos.ubicacion}>
+                        <td>{datos.ubicacion}</td>
+                        <td>{datos.cantidadTotal}</td>
+                        <td>{datos.totalColones.toFixed(2)}</td>
+                        <td>{datos.totalDolares.toFixed(2)}</td>
+                      </tr>
+                    ))}
+                    <tr>
+                      <td colSpan={1} style={{ textAlign: 'right', fontWeight: 'bold' }}>Totales Globales:</td>
+                      <td style={{ fontWeight: 'bold' }}>{totalCantidad.toFixed(2)}</td>
+                      <td style={{ fontWeight: 'bold' }}>{totalCRCP.toFixed(2)}</td>
+                      <td style={{ fontWeight: 'bold' }}>{totalUSDP.toFixed(2)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+                {activeCategory === 'productos' && showChartProductos && (
+                  <Bar data={dataProductosChart} options={options} />
+                )}
+                </>
+              ) : (
+                <p>Genera un reporte de productos.</p>
+              )}
                 <div className="product-grid">
                   {filteredProductos.map((producto) => (
                     <div key={producto.id} className="product-item">

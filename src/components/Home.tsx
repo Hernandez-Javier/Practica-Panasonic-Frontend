@@ -15,6 +15,7 @@ import ModalDepartamento from './Departamento';
 import ModalEditar from './EditProducto';
 import ModalUsuario from './Usuario';
 import ModalEditUsuario from './EditUsuario';
+import ModalEditUbicacion from './EditUbicacion';
 
 interface Producto {
   id: number;
@@ -35,6 +36,12 @@ interface Usuario {
   nombre: string;
   email: string;
   rol: string;
+}
+
+interface Data {
+  id:number;
+  nombre: string;
+  descripcion: string;
 }
 
 const Home: React.FC = () => {
@@ -66,11 +73,14 @@ const Home: React.FC = () => {
   const [isDevolucionModalOpen, setIsDevolucionModalOpen] = useState(false);
   const [isSalidaParticularModalOpen, setIsSalidaParticularModalOpen] = useState(false);
   const [isUbicacionModalOpen, setIsUbicacionModalOpen] = useState(false);
+  const [isEditUbicacionModalOpen, setIsEditUbicacionModalOpen] = useState(false);
+  const [isEditDepartamentoModalOpen, setIsEditDepartamentoModalOpen] = useState(false);
   const [isDepartamentoModalOpen, setIsDepartamentoModalOpen] = useState(false);
   const [codigoProducto, setCodigoProducto] = useState('');
   const [nombreProducto, setNombreProducto] = useState('');
   const [productoSeleccionado, setProductoSeleccionado] = useState<Producto | null>(null); // Estado para el producto seleccionado para editar
   const [usuarioSeleccionado, setUsuarioSeleccionado] = useState<Usuario | null>(null); // Estado para el producto seleccionado para editar
+  const [datoSeleccionado, setDatoSeleccionado] = useState<Data | null>(null); // Estado para el producto seleccionado para editar
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState(''); //guarda la categoria actual para que se muestre al usuario
 
@@ -429,6 +439,18 @@ const Home: React.FC = () => {
     setIsEditarUsuarioModalOpen(true);
   };
 
+  //abrir modal de edicion de ubicacion
+  const handleOpenEditarDataModal = (ubicacion: Data) => {
+    setDatoSeleccionado(ubicacion);
+    setIsEditUbicacionModalOpen(true);
+  };
+
+  //abrir modal de edicion de departmento
+  const handleOpenEditarDepModal = (ubicacion: Data) => {
+    setDatoSeleccionado(ubicacion);
+    setIsEditDepartamentoModalOpen(true);
+  };
+
   //editar producto
   const handleEditar = async (
     codigo: string,
@@ -501,6 +523,61 @@ const Home: React.FC = () => {
       console.error('Error al editar el usuario:', error);
     }
   };
+  
+  //editar ubicacion
+  const handleEditarUbicacion = async (
+    id: number,
+    nombre: string,
+    descripcion: string
+  ) => {
+    try {
+      const response = await axios.put(
+        `http://localhost:3000/ubicaciones/modificar/${id}`,
+        {
+          nombre,
+          descripcion,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      console.log(response.data);
+      fetchUbicaciones(); // Asume que esta función recarga las ubicaciones desde la base de datos
+      setIsEditUbicacionModalOpen(false); // Cierra el modal de edición
+    } catch (error) {
+      console.error('Error al editar la ubicación:', error);
+    }
+  };
+
+  //modificar departamento
+  const handleEditarDepartamento = async (
+    id: number,
+    nombre: string,
+    descripcion: string
+  ) => {
+    try {
+      const response = await axios.put(
+        `http://localhost:3000/departamentos/modify/${id}`,
+        {
+          nombre,
+          descripcion
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      console.log(response.data);
+      fetchDepartamentos();
+      setIsEditDepartamentoModalOpen(false);
+    } catch (error) {
+      console.error('Error al editar el departamento:', error);
+    }
+  };
+  
   
   //entrada de un producto
   const handleEntrada = async (codigoProducto: string, cantidad: number, ordenCompra: string) => {
@@ -1006,7 +1083,7 @@ const Home: React.FC = () => {
                         </div>
                         <div className="products-buttons-column">
                           <div className="product-buttons">
-                            {/*<button onClick={() => handleModificarUbicacion(ubicacion.id)}>Modificar</button>*/}
+                            <button onClick={() => handleOpenEditarDataModal(ubicacion)}>Modificar</button>
                           </div>
                           <button className="delete-product-button" onClick={() => handleDeleteUbicacion(ubicacion.nombre)}>Eliminar</button>
                         </div>
@@ -1033,7 +1110,7 @@ const Home: React.FC = () => {
                         </div>
                         <div className="products-buttons-column">
                           <div className="product-buttons">
-                            {/*<button onClick={() => handleModificarDepartamento(departamento.id)}>Modificar</button>*/}
+                            <button onClick={() => handleOpenEditarDepModal(departamento)}>Modificar</button>
                           </div>
                           <button className="delete-product-button" onClick={() => handleDeleteDepartamento(departamento.nombre)}>Eliminar</button>
                         </div>
@@ -1161,6 +1238,28 @@ const Home: React.FC = () => {
           nombre={usuarioSeleccionado.nombre}
           email={usuarioSeleccionado.email}
           rol={usuarioSeleccionado.rol}
+        />
+      )}
+      {datoSeleccionado && (
+        <ModalEditUbicacion
+          isOpen={isEditUbicacionModalOpen}
+          onRequestClose={() => setIsEditUbicacionModalOpen(false)}
+          onSubmit={handleEditarUbicacion}
+          id={datoSeleccionado.id}
+          nombre={datoSeleccionado.nombre}
+          descripcion={datoSeleccionado.descripcion}
+          entidad='Ubicacion'
+        />
+      )}
+      {datoSeleccionado && (
+        <ModalEditUbicacion
+          isOpen={isEditDepartamentoModalOpen}
+          onRequestClose={() => setIsEditDepartamentoModalOpen(false)}
+          onSubmit={handleEditarDepartamento}
+          id={datoSeleccionado.id}
+          nombre={datoSeleccionado.nombre}
+          descripcion={datoSeleccionado.descripcion}
+          entidad='Departamento'
         />
       )}
     </div>
