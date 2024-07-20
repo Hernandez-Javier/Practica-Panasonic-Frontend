@@ -30,19 +30,28 @@ const ModalUsuarioNuevo: React.FC<ModalUsuarioNuevoProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null); // Resetear el error antes de la nueva petición
 
     if (!identificacion.trim() || !nombre.trim() || !email.trim() || !rol.trim() || !contraseña.trim()) {
       setError('Por favor complete todos los campos.');
       return;
     }
 
-    await onSubmit(identificacion, nombre, email, rol, contraseña);
-    setIdentificacion('');
-    setNombre('');
-    setEmail('');
-    setRol('');
-    setContraseña('');
-    onRequestClose();
+    try {
+      await onSubmit(identificacion, nombre, email, rol, contraseña);
+      setIdentificacion('');
+      setNombre('');
+      setEmail('');
+      setRol('');
+      setContraseña('');
+      onRequestClose();
+    } catch (err:any) {
+      if (err.statusCode === 404) {
+        setError(err.message || 'Ha ocurrido un error.');
+      } else {
+        setError('Ha ocurrido un error inesperado.');
+      }
+    }
   };
 
   return (

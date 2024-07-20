@@ -14,7 +14,7 @@ interface ModalEditarProps {
     codigo: string,
     nombre: string,
     descripcion: string,
-    ubicacion: string,
+    ubicacion: number,
     proveedor: string,
     cantidad: number,
     cantidadMinima: number,
@@ -22,22 +22,22 @@ interface ModalEditarProps {
     precioUnidadUSD: number,
     categoria: string
   ) => void;
-  codigo: string;
-  nombre: string;
-  descripcion: string;
-  ubicacion: string;
-  proveedor: string;
-  cantidad: number;
-  cantidadMinima: number;
-  precioUnidadCol: number;
-  precioUnidadUSD: number;
-  categoria: string;
+  codigo?: string;
+  nombre?: string;
+  descripcion?: string;
+  ubicacion?: string;
+  proveedor?: string;
+  cantidad?: number;
+  cantidadMinima?: number;
+  precioUnidadCol?: number;
+  precioUnidadUSD?: number;
+  categoria?: string;
 }
 
 const ModalEditar: React.FC<ModalEditarProps> = ({
-  isOpen, 
-  onRequestClose, 
-  onSubmit, 
+  isOpen,
+  onRequestClose,
+  onSubmit,
   codigo,
   nombre,
   descripcion,
@@ -47,22 +47,22 @@ const ModalEditar: React.FC<ModalEditarProps> = ({
   cantidadMinima,
   precioUnidadCol,
   precioUnidadUSD,
-  categoria 
+  categoria
 }) => {
   const [formData, setFormData] = useState({
-    codigo,
-    nombre,
-    descripcion,
-    ubicacion,
-    proveedor,
-    cantidad,
-    cantidadMinima,
-    precioUnidadCol,
-    precioUnidadUSD,
-    categoria,
+    codigo: '',
+    nombre: '',
+    descripcion: '',
+    ubicacionId: 0, // ID de la ubicación
+    proveedor: '',
+    cantidad: 0,
+    cantidadMinima: 0,
+    precioUnidadCol: 0,
+    precioUnidadUSD: 0,
+    categoria: '',
   });
 
-  const [ubicaciones, setUbicaciones] = useState<{ id: string; nombre: string; descripcion: string }[]>([]);
+  const [ubicaciones, setUbicaciones] = useState<{ id: number; nombre: string; descripcion: string }[]>([]);
 
   const fetchUbicaciones = async () => {
     try {
@@ -80,17 +80,32 @@ const ModalEditar: React.FC<ModalEditarProps> = ({
   useEffect(() => {
     if (isOpen) {
       fetchUbicaciones();
+      // Inicializar el formulario con los datos proporcionados
       setFormData({
-        codigo,
-        nombre,
-        descripcion,
-        ubicacion,
-        proveedor,
-        cantidad,
-        cantidadMinima,
-        precioUnidadCol,
-        precioUnidadUSD,
-        categoria,
+        codigo: codigo || '',
+        nombre: nombre || '',
+        descripcion: descripcion || '',
+        ubicacionId: ubicacion ? ubicaciones.find(ubica => ubica.nombre === ubicacion)?.id || 0 : 0,
+        proveedor: proveedor || '',
+        cantidad: cantidad || 0,
+        cantidadMinima: cantidadMinima || 0,
+        precioUnidadCol: precioUnidadCol || 0,
+        precioUnidadUSD: precioUnidadUSD || 0,
+        categoria: categoria || '',
+      });
+    } else {
+      // Limpiar el formulario cuando el modal se cierra
+      setFormData({
+        codigo: '',
+        nombre: '',
+        descripcion: '',
+        ubicacionId: 0,
+        proveedor: '',
+        cantidad: 0,
+        cantidadMinima: 0,
+        precioUnidadCol: 0,
+        precioUnidadUSD: 0,
+        categoria: '',
       });
     }
   }, [isOpen, codigo, nombre, descripcion, ubicacion, proveedor, cantidad, cantidadMinima, precioUnidadCol, precioUnidadUSD, categoria]);
@@ -112,9 +127,10 @@ const ModalEditar: React.FC<ModalEditarProps> = ({
   };
 
   const handleChangeSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedId = Number(e.target.value);
     setFormData({
       ...formData,
-      ubicacion: e.target.value,
+      ubicacionId: selectedId,
     });
   };
 
@@ -124,7 +140,7 @@ const ModalEditar: React.FC<ModalEditarProps> = ({
       formData.codigo,
       formData.nombre,
       formData.descripcion,
-      formData.ubicacion,
+      formData.ubicacionId,
       formData.proveedor,
       Number(formData.cantidad),
       Number(formData.cantidadMinima),
@@ -153,9 +169,10 @@ const ModalEditar: React.FC<ModalEditarProps> = ({
         </label>
         <label>
           Ubicación:
-          <select name="ubicacion" value={formData.ubicacion} onChange={handleChangeSelect}>
+          <select name="ubicacion" value={formData.ubicacionId} onChange={handleChangeSelect}>
+            <option value="" disabled>Seleccione una ubicación</option>
             {ubicaciones.map((ubica) => (
-              <option key={ubica.id} value={ubica.nombre}>
+              <option key={ubica.id} value={ubica.id}>
                 {ubica.nombre}
               </option>
             ))}

@@ -427,7 +427,7 @@ const Home: React.FC = () => {
     setNombreProducto(nombre);
   };
 
-  //abrir modal de edicion
+  //abrir modal de edicion producto
   const handleOpenEditarProductoModal = (producto: Producto) => {
     setProductoSeleccionado(producto);
     setIsEditarProductoModalOpen(true);
@@ -456,7 +456,7 @@ const Home: React.FC = () => {
     codigo: string,
     nombre: string,
     descripcion: string,
-    ubicacion: string,
+    ubicacion: number,
     proveedor: string,
     cantidad: number,
     cantidadMinima: number,
@@ -696,7 +696,7 @@ const Home: React.FC = () => {
     codigo: string, 
     nombre:string, 
     descripcion:string, 
-    ubicacion:string,
+    ubicacion:number,
     proveedor:string,
     cantidad: number, 
     cantidadMinima:number,
@@ -935,6 +935,17 @@ const Home: React.FC = () => {
             </div>
           </div>
         </div>
+        <div className="contenedor-botones">
+            {activeCategory === 'departamentos' && (
+              <button className="add-product-button" onClick={() => setIsDepartamentoModalOpen(true)}>Agregar Departamento</button>
+            )}
+            {activeCategory === 'ubicaciones' && (
+              <button className="add-product-button" onClick={() => setIsUbicacionModalOpen(true)}>Agregar Ubicación</button>
+            )}
+            {activeCategory === 'ubicaciones' && (
+              <button className="add-product-button" onClick={() => setIsUbicacionModalOpen(true)}>Agregar Ubicación</button>
+            )}
+        </div>
 
         <div className="product-list"> 
           {showEntradas ? (
@@ -1070,9 +1081,6 @@ const Home: React.FC = () => {
           ) : showUbicaciones ? (
               filteredUbicaciones.length > 0 ? (
                 <>
-                  <div className="contenedor-botones">
-                    <button className="add-product-button" onClick={() => setIsUbicacionModalOpen(true)}>Agregar Ubicación</button>
-                  </div>
                   <div className="product-grid">
                     {filteredUbicaciones.map((ubicacion) => (
                       <div key={ubicacion.id} className="product-item">
@@ -1094,12 +1102,10 @@ const Home: React.FC = () => {
               ) : (
                 <p>No hay ubicaciones disponibles.</p>
               )
-          ) : showDepartamentos ? (
+          ) : 
+          showDepartamentos ? (
               filteredDepartamentos.length > 0 ? (
                 <>
-                  <div className="contenedor-botones">
-                    <button className="add-product-button" onClick={() => setIsDepartamentoModalOpen(true)}>Agregar Departamento</button>
-                  </div>
                   <div className="product-grid">
                     {filteredDepartamentos.map((departamento) => (
                       <div key={departamento.id} className="product-item">

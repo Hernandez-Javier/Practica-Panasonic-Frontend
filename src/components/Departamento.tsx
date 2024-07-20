@@ -67,7 +67,7 @@ const ModalDepartamento: React.FC<ModalDepartamentoProps> = ({ isOpen, onRequest
           Descripción:
           <textarea value={descripcion} onChange={handleDescripcionChange} />
         </label>
-        <button type="submit">Registrar Entrada</button>
+        <button type="submit">Registrar Departamento</button>
       </form>
     </Modal>
   );

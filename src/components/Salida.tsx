@@ -10,12 +10,12 @@ Modal.setAppElement('#root');
 interface ModalSalidaProps {
   isOpen: boolean;
   onRequestClose: () => void;
-  onSubmit: (codigo: string, cantidad: number, destino:string, solicitante:string) => Promise<void>;
+  onSubmit: (codigo: string, cantidad: number, destino: string, solicitante: string) => Promise<void>;
   codigoProducto: string; // prop para el código del producto
   nombreProducto: string; // prop para el nombre del producto
 }
 
-const ModalSalida: React.FC<ModalSalidaProps> = ({ isOpen, onRequestClose, onSubmit, codigoProducto, nombreProducto}) => {
+const ModalSalida: React.FC<ModalSalidaProps> = ({ isOpen, onRequestClose, onSubmit, codigoProducto, nombreProducto }) => {
   const [codigo, setCodigo] = useState('');
   const [cantidad, setCantidad] = useState(0);
   const [destino, setDestino] = useState('');
@@ -49,14 +49,19 @@ const ModalSalida: React.FC<ModalSalidaProps> = ({ isOpen, onRequestClose, onSub
           Authorization: `Bearer ${token}`,
         },
       });
-      setDepartamentos(response.data);
+      const departamentosData = response.data;
+      setDepartamentos(departamentosData);
+      if (departamentosData.length > 0) {
+        setDestino(departamentosData[0].nombre); // Inicializar con el primer departamento
+      }
     } catch (error) {
-      console.error('Error fetching salidas:', error);
+      console.error('Error fetching departamentos:', error);
     }
   };
 
-  const handleSubmit = async(e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log(codigo, cantidad, destino, solicitante);
 
     // Validar que todos los campos estén llenos
     if (!codigo.trim() || cantidad === 0 || !destino.trim() || !solicitante.trim()) {
@@ -91,7 +96,7 @@ const ModalSalida: React.FC<ModalSalidaProps> = ({ isOpen, onRequestClose, onSub
   };
 
   return (
-    <Modal isOpen={isOpen} onRequestClose={onRequestClose} contentLabel="Salida de Inventario"  className="modal-content">
+    <Modal isOpen={isOpen} onRequestClose={onRequestClose} contentLabel="Salida de Inventario" className="modal-content">
       <h2>Salida de Inventario</h2>
       {error && <p className="error-message">{error}</p>}
       <form onSubmit={handleSubmit}>

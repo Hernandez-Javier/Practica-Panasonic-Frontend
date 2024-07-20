@@ -14,7 +14,7 @@ interface ModalProductoProps {
     codigo: string,
     nombre: string,
     descripcion: string,
-    ubicacion: string,
+    ubicacion: number,
     proveedor: string,
     cantidad: number,
     cantidadMinima: number,
@@ -28,14 +28,14 @@ const ModalProducto: React.FC<ModalProductoProps> = ({ isOpen, onRequestClose, o
   const [codigo, setCodigo] = useState('');
   const [nombre, setNombre] = useState('');
   const [descripcion, setDescripcion] = useState('');
-  const [ubicacion, setUbicacion] = useState('');
+  const [ubicacion, setUbicacion] = useState(0);
   const [proveedor, setProveedor] = useState('');
   const [cantidad, setCantidad] = useState(0);
   const [cantidadMinima, setCantidadMinima] = useState(0);
   const [precioUnidadCol, setPrecioUnidadCol] = useState(0);
   const [precioUnidadUSD, setPrecioUnidadUSD] = useState(0);
   const [categoria, setCategoria] = useState('');
-  const [ubicaciones, setUbicaciones] = useState<{ id: string; nombre: string; descripcion: string }[]>([]);
+  const [ubicaciones, setUbicaciones] = useState<{ id: number; nombre: string; descripcion: string }[]>([]);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -47,7 +47,7 @@ const ModalProducto: React.FC<ModalProductoProps> = ({ isOpen, onRequestClose, o
       setCodigo('');
       setNombre('');
       setDescripcion('');
-      setUbicacion('');
+      setUbicacion(ubicaciones.length > 0 ? ubicaciones[0].id : 0);
       setProveedor('');
       setCantidad(0);
       setCantidadMinima(0);
@@ -79,7 +79,7 @@ const ModalProducto: React.FC<ModalProductoProps> = ({ isOpen, onRequestClose, o
       codigo.trim() === '' ||
       nombre.trim() === '' ||
       descripcion.trim() === '' ||
-      ubicacion.trim() === '' ||
+      ubicacion === 0 ||
       proveedor.trim() === '' ||
       cantidad === 0 ||
       cantidadMinima === 0 ||
@@ -112,7 +112,7 @@ const ModalProducto: React.FC<ModalProductoProps> = ({ isOpen, onRequestClose, o
       setCodigo('');
       setNombre('');
       setDescripcion('');
-      setUbicacion('');
+      setUbicacion(0);
       setProveedor('');
       setCantidad(0);
       setCantidadMinima(0);
@@ -153,7 +153,7 @@ const ModalProducto: React.FC<ModalProductoProps> = ({ isOpen, onRequestClose, o
         </label>
         <label>
           Ubicación:
-          <select value={ubicacion} onChange={(e) => setUbicacion(e.target.value)}>
+          <select value={ubicacion} onChange={(e) => setUbicacion(Number(e.target.value))}>
             {ubicaciones.map((ubica) => (
               <option key={ubica.id} value={ubica.id}>
                 {ubica.nombre}
