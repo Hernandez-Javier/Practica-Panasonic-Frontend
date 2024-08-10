@@ -39,13 +39,9 @@ const ModalUsuarioNuevo: React.FC<ModalUsuarioNuevoProps> = ({
 
     try {
       await onSubmit(identificacion, nombre, email, rol, contraseña);
-      setIdentificacion('');
-      setNombre('');
-      setEmail('');
-      setRol('');
-      setContraseña('');
+      handleClearFields(); // Limpiar campos al enviar el formulario con éxito
       onRequestClose();
-    } catch (err:any) {
+    } catch (err: any) {
       if (err.statusCode === 404) {
         setError(err.message || 'Ha ocurrido un error.');
       } else {
@@ -54,10 +50,24 @@ const ModalUsuarioNuevo: React.FC<ModalUsuarioNuevoProps> = ({
     }
   };
 
+  const handleClearFields = () => {
+    setIdentificacion('');
+    setNombre('');
+    setEmail('');
+    setRol('');
+    setContraseña('');
+  };
+
+  const handleCloseModal = () => {
+    handleClearFields();
+    setError('');
+    onRequestClose();
+  };
+
   return (
     <Modal
       isOpen={isOpen}
-      onRequestClose={onRequestClose}
+      onRequestClose={handleCloseModal}
       contentLabel="Agregar Usuario"
       className="modal-content"
     >
@@ -96,13 +106,15 @@ const ModalUsuarioNuevo: React.FC<ModalUsuarioNuevoProps> = ({
         </label>
         <label>
           Rol:
-          <input
-            type="text"
+          <select
             value={rol}
             onChange={(e) => setRol(e.target.value)}
-            autoComplete="off"
             name="new-rol"
-          />
+          >
+            <option value="">Seleccione un rol</option>
+            <option value="Admin">Admin</option>
+            <option value="Usuario">Usuario</option>
+          </select>
         </label>
         <label>
           Contraseña:

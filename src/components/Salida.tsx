@@ -23,6 +23,7 @@ const ModalSalida: React.FC<ModalSalidaProps> = ({ isOpen, onRequestClose, onSub
   const [nombre, setNombre] = useState('');
   const [departamentos, setDepartamentos] = useState<{ id: string, nombre: string, descripcion: string }[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false); //Estado para controlar el estado de carga
 
   // Actualizar el estado interno cuando cambian los props
   useEffect(() => {
@@ -39,6 +40,7 @@ const ModalSalida: React.FC<ModalSalidaProps> = ({ isOpen, onRequestClose, onSub
       setNombre('');
       setDepartamentos([]);
       setError(null);
+      setIsLoading(false); // Reiniciar el estado de carga al cerrar el modal
     }
   }, [isOpen, codigoProducto, nombreProducto]);
 
@@ -69,6 +71,8 @@ const ModalSalida: React.FC<ModalSalidaProps> = ({ isOpen, onRequestClose, onSub
       return;
     }
 
+    setIsLoading(true); // Establecer el estado de carga a true
+
     try {
       await onSubmit(codigo, cantidad, destino, solicitante);
       setCodigo('');
@@ -82,6 +86,8 @@ const ModalSalida: React.FC<ModalSalidaProps> = ({ isOpen, onRequestClose, onSub
       if (error.message) {
         setError(error.message);
       }
+    } finally {
+      setIsLoading(false); // Establecer el estado de carga a false al finalizar la operación
     }
   };
 
@@ -126,7 +132,9 @@ const ModalSalida: React.FC<ModalSalidaProps> = ({ isOpen, onRequestClose, onSub
           Solicitante:
           <input type="text" value={solicitante} onChange={handleSolicitanteChange} />
         </label>
-        <button type="submit">Registrar Salida</button>
+        <button type="submit" disabled={isLoading}>
+          {isLoading ? 'Registrando...' : 'Registrar Salida'}
+        </button>
       </form>
     </Modal>
   );

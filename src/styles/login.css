@@ -44,15 +44,97 @@
 .form-container button {
   width: 100%;
   padding: 12px;
-  background-color: #007bff; /* Color de fondo verde */
+  background-color: #007bff;
   color: white;
   border: none;
   border-radius: 8px;
   cursor: pointer;
   font-size: 1.1em;
   transition: background-color 0.3s ease; /* Transición suave en el cambio de color */
+  margin-bottom: 20px;
 }
 
 .form-container button:hover {
   background-color: #0957ac; /* Cambio de color verde oscuro al hacer hover */
+}
+
+/* Contenedor principal */
+.password-reset-container {
+  max-width: 400px;
+  width: 100%;
+  padding: 30px; /* Aumentamos el padding para más espacio */
+  border-radius: 10px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1); /* Sombra más suave y elevada */
+  background-color: #ffffff; /* Fondo blanco */
+}
+
+/* Botón principal */
+.password-reset-button {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.password-reset-button:hover {
+  background-color: #0056b3;
+  transform: scale(1.05);
+}
+
+/* Formularios */
+.password-reset-form {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  width: 100%;
+  max-width: 400px;
+  margin-top: 20px;
+  transition: opacity 0.5s ease;
+}
+
+.password-reset-form.hidden {
+  opacity: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.password-reset-form.visible {
+  opacity: 1;
+  height: auto;
+}
+
+/* Campos de entrada */
+.password-reset-form input {
+  width: calc(100% - 20px);
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+/* Botones dentro de los formularios */
+.password-reset-form button {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.password-reset-form button:hover {
+  background-color: #0056b3;
+  transform: scale(1.05);
+}
+
+.custom-link {
+  padding-left: 20px;
 }

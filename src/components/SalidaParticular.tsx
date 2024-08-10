@@ -17,6 +17,7 @@ const ModalSalidaParticular: React.FC<ModalSalidaParticularProps> = ({ isOpen, o
   const [cantidad, setCantidad] = useState(0);
   const [motivo, setMotivo] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false); //Estado para controlar el estado de carga
 
   useEffect(() => {
     if (!isOpen) {
@@ -24,6 +25,7 @@ const ModalSalidaParticular: React.FC<ModalSalidaParticularProps> = ({ isOpen, o
       setCantidad(0);
       setMotivo('');
       setError(null);
+      setIsLoading(false); // Reiniciar el estado de carga al cerrar el modal
     }
   }, [isOpen]);
 
@@ -34,6 +36,8 @@ const ModalSalidaParticular: React.FC<ModalSalidaParticularProps> = ({ isOpen, o
       setError('Por favor complete todos los campos.');
       return;
     }
+
+    setIsLoading(true); // Establecer el estado de carga a true
 
     try {
       await onSubmit(
@@ -48,6 +52,8 @@ const ModalSalidaParticular: React.FC<ModalSalidaParticularProps> = ({ isOpen, o
     } catch (error: any) {
       if(error.message){}
       setError(error.message);
+    } finally {
+      setIsLoading(false); // Establecer el estado de carga a false al finalizar la operación
     }
   };
 
@@ -83,7 +89,9 @@ const ModalSalidaParticular: React.FC<ModalSalidaParticularProps> = ({ isOpen, o
           Motivo:
           <input type="text" value={motivo} onChange={handleMotivoChange} />
         </label>
-        <button type="submit">Registrar Salida Particular</button>
+        <button type="submit" disabled={isLoading}>
+          {isLoading ? 'Registrando...' : 'Registrar Salida Particular'}
+        </button>
       </form>
     </Modal>
   );

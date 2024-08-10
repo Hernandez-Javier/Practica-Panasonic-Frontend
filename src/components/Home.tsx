@@ -1,7 +1,8 @@
-import React, { useEffect, useState, ChangeEvent } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {jwtDecode} from 'jwt-decode';
 import { format } from 'date-fns';
+import { toast } from 'react-toastify';
 import axios from 'axios';
 import '../styles/home.css';
 import PanasonicLogo from '../images/logo-Panasonic.png';
@@ -10,12 +11,13 @@ import ModalSalida from './Salida';
 import ModalProducto from './NuevoProducto';
 import ModalDevolucion from './Devolucion';
 import ModalSalidaparticular from './SalidaParticular';
-import ModalUbicacion from './Ubicacion'; // Importar el componente CRUD de Ubicaciones
+import ModalUbicacion from './Ubicacion';
 import ModalDepartamento from './Departamento';
 import ModalEditar from './EditProducto';
 import ModalUsuario from './Usuario';
 import ModalEditUsuario from './EditUsuario';
 import ModalEditUbicacion from './EditUbicacion';
+import Export from './Export';
 
 interface Producto {
   id: number;
@@ -53,16 +55,19 @@ const Home: React.FC = () => {
   const [showSalidas, setShowSalidas] = useState(false);//estado para mostrar las salidas
   const [devoluciones, setDevoluciones] = useState<any[]>([]);//estado para las devoluciones
   const [showDevoluciones, setShowDevoluciones] = useState(false);//estado par mostrar udevoluciones
-  const [salidasParticulares, setSalidasParticulares] = useState<any[]>([]);//estado para las devoluciones
-  const [showSalidasParticulares, setShowSalidasParticulares] = useState(false);//estado par mostrar ubicaciones
+  const [salidasParticulares, setSalidasParticulares] = useState<any[]>([]);//estado para las salidas particulares
+  const [showSalidasParticulares, setShowSalidasParticulares] = useState(false);//estado par mostrar las salidas particulares
   const [ubicaciones, setUbicaciones] = useState<any[]>([]);//estado para las ubicaciones
   const [showUbicaciones, setShowUbicaciones] = useState(false);//estado par mostrar ubicaciones
   const [departamentos, setDepartamentos] = useState<any[]>([]);//estado para los departamentos
   const [showDepartamentos, setShowDepartamentos] = useState(false);//estado par mostrar departamentos
   const [bitacora, setBitacora] = useState<any[]>([]);//estado para la bitacora
   const [showBitacora, setShowBitacora] = useState(false);//estado para mostrar la bitacora
-  const [usuarios, setUsuarios] = useState<any[]>([]);//estado para la bitacora
-  const [showUsuarios, setShowUsuarios] = useState(false);//estado para mostrar la bitacora
+  const [usuarios, setUsuarios] = useState<any[]>([]);//estado para los usuarios
+  const [showUsuarios, setShowUsuarios] = useState(false);//estado para mostrar los usuarios
+  const [emails, setEmails] = useState<any[]>([]);//estado para los emails
+  const [showEmails, setShowEmails] = useState(false);//estado para mostrar los emails
+  const [email, setEmail] = useState<string | null>(null);//estado para los email que se van a agregar
   const [error, setError] = useState('');
   const [isProductoModalOpen, setIsProductoModalOpen] = useState(false);
   const [isUsuarioModalOpen, setIsUsuarioModalOpen] = useState(false);
@@ -79,15 +84,20 @@ const Home: React.FC = () => {
   const [codigoProducto, setCodigoProducto] = useState('');
   const [nombreProducto, setNombreProducto] = useState('');
   const [productoSeleccionado, setProductoSeleccionado] = useState<Producto | null>(null); // Estado para el producto seleccionado para editar
-  const [usuarioSeleccionado, setUsuarioSeleccionado] = useState<Usuario | null>(null); // Estado para el producto seleccionado para editar
-  const [datoSeleccionado, setDatoSeleccionado] = useState<Data | null>(null); // Estado para el producto seleccionado para editar
+  const [usuarioSeleccionado, setUsuarioSeleccionado] = useState<Usuario | null>(null); // Estado para el usuario seleccionado para editar
+  const [datoSeleccionado, setDatoSeleccionado] = useState<Data | null>(null); // guarda depto o ubicacion seleccionado para editar
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState(''); //guarda la categoria actual para que se muestre al usuario
+  //paginacion de los productos
+  const [currentPage, setCurrentPage] = useState(1); //estado para saber la pag actual
+  const productsPerPage = 20; // productos pr pagina
+  const topRef = useRef<HTMLDivElement>(null);//para regresar al inicio de la pag al cambiar pag
 
   const navigate = useNavigate();
 
   const token = localStorage.getItem('token');
   let usuarioNombre = 'Usuario';
+  let rol = '';
 
   useEffect(() => {
     if (!token) {
@@ -102,6 +112,7 @@ const Home: React.FC = () => {
     try {
       const decodedToken: any = jwtDecode(token);
       usuarioNombre = decodedToken.nombre || 'Usuario';
+      rol = decodedToken.rol;
     } catch (error) {
       console.error('Error decodificando el token:', error);
     }
@@ -109,6 +120,7 @@ const Home: React.FC = () => {
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
+    handlePageChange(1);
   };
 
   //mostrar productos
@@ -128,6 +140,7 @@ const Home: React.FC = () => {
       setShowDepartamentos(false);
       setShowBitacora(false);
       setShowUsuarios(false);
+      setShowEmails(false);
       setShowProductos(true);
     } catch (error) {
       console.error('Error fetching productos:', error);
@@ -151,9 +164,10 @@ const Home: React.FC = () => {
       setShowDepartamentos(false);
       setShowBitacora(false);
       setShowProductos(false);
+      setShowEmails(false);
       setShowUsuarios(true);
     } catch (error) {
-      console.error('Error fetching productos:', error);
+      console.error('Error fetching usuarios:', error);
     }
   };
 
@@ -174,6 +188,7 @@ const Home: React.FC = () => {
       setShowDepartamentos(false);
       setShowBitacora(false);
       setShowUsuarios(false);
+      setShowEmails(false);
       setShowEntradas(true);
     } catch (error) {
       console.error('Error fetching entradas:', error);
@@ -197,6 +212,7 @@ const Home: React.FC = () => {
       setShowDepartamentos(false);
       setShowBitacora(false);
       setShowUsuarios(false);
+      setShowEmails(false);
       setShowSalidas(true);
     } catch (error) {
       console.error('Error fetching salidas:', error);
@@ -220,9 +236,10 @@ const Home: React.FC = () => {
       setShowDepartamentos(false);
       setShowBitacora(false);
       setShowUsuarios(false);
+      setShowEmails(false);
       setShowDevoluciones(true);
     } catch (error) {
-      console.error('Error fetching salidas:', error);
+      console.error('Error fetching devoluciones:', error);
     }
   };
 
@@ -243,9 +260,10 @@ const Home: React.FC = () => {
       setShowDepartamentos(false);
       setShowBitacora(false);
       setShowUsuarios(false);
+      setShowEmails(false);
       setShowSalidasParticulares(true);
     } catch (error) {
-      console.error('Error fetching salidas:', error);
+      console.error('Error fetching salidas particulares:', error);
     }
   };
 
@@ -266,9 +284,10 @@ const Home: React.FC = () => {
       setShowDepartamentos(false);
       setShowBitacora(false);
       setShowUsuarios(false);
+      setShowEmails(false);
       setShowUbicaciones(true);
     } catch (error) {
-      console.error('Error fetching salidas:', error);
+      console.error('Error fetching ubicaciones:', error);
     }
   };
 
@@ -289,9 +308,10 @@ const Home: React.FC = () => {
       setShowUbicaciones(false);
       setShowBitacora(false);
       setShowUsuarios(false);
+      setShowEmails(false);
       setShowDepartamentos(true);
     } catch (error) {
-      console.error('Error fetching salidas:', error);
+      console.error('Error fetching departamentos:', error);
     }
   };
 
@@ -312,9 +332,34 @@ const Home: React.FC = () => {
       setShowUbicaciones(false);
       setShowDepartamentos(false);
       setShowUsuarios(false);
+      setShowEmails(false);
       setShowBitacora(true);
     } catch (error) {
       console.error('Error fetching salidas:', error);
+    }
+  };
+
+  //mostrar emails
+  const fetchEmails = async () => {
+    try {
+      const response = await axios.get('http://localhost:3000/notif/all', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setEmails(response.data);
+      setShowProductos(false);
+      setShowEntradas(false);
+      setShowSalidas(false);
+      setShowDevoluciones(false);
+      setShowSalidasParticulares(false);
+      setShowUbicaciones(false);
+      setShowDepartamentos(false);
+      setShowUsuarios(false);
+      setShowBitacora(false);
+      setShowEmails(true);
+    } catch (error) {
+      console.error('Error fetching emails:', error);
     }
   };
 
@@ -339,6 +384,7 @@ const Home: React.FC = () => {
         setError('Error al eliminar el producto');
       }
     }
+    toast.success('Producto eliminado');
   };
 
   //eliminar ubicacion
@@ -356,13 +402,14 @@ const Home: React.FC = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
   
+        toast.success('Ubicacion eliminada');
         setUbicaciones(ubicaciones.filter(ubicacion => ubicacion.nombre !== nombre));
       } catch (error) {
         console.error('Error eliminando la ubicacion', error);
         setError('Error al eliminar la ubicacion');
+        toast.error('No se pudo eliminar. Revisa que no existan productos registrados en esta ubicación');
       }
     }
-    
   };
 
   //eliminar departamento
@@ -386,6 +433,7 @@ const Home: React.FC = () => {
         setError('Error al eliminar el producto');
       }
     }
+    toast.success('Departamento eliminado');
   };
 
   //eliminar usuario
@@ -403,12 +451,38 @@ const Home: React.FC = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
   
+        toast.success('Usuario eliminado');
         setUsuarios(usuarios.filter(usuario => usuario.id !== id));
       } catch (error) {
         console.error('Error eliminando el usuario', error);
         setError('Error al eliminar el usuario');
+        toast.error('No se puede eliminar ese usuario');
       }
     }
+  };
+
+  //eliminar email de notificaciones
+  const handleDeleteEmail = async (id: string) => {
+    if (!token) {
+      setError('Token de autorización no proporcionado');
+      return;
+    }
+
+    const confirmarEliminar = window.confirm("¿Deseas eliminar este email?");
+
+    if (confirmarEliminar) {
+      try {
+        await axios.delete(`http://localhost:3000/notif/eliminar/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+  
+        setEmails(emails.filter(email => email.id !== id));
+      } catch (error) {
+        console.error('Error eliminando el email', error);
+        setError('Error al eliminar el email');
+      }
+    }
+    toast.success('Email eliminado');
   };
 
   //abrir modal de entrada
@@ -451,7 +525,7 @@ const Home: React.FC = () => {
     setIsEditDepartamentoModalOpen(true);
   };
 
-  //editar producto
+  //modificar producto
   const handleEditar = async (
     codigo: string,
     nombre: string,
@@ -486,13 +560,15 @@ const Home: React.FC = () => {
       );
       console.log(response.data);
       fetchProductos();
+      toast.success('Producto modificado con éxito!');
       setIsEditarProductoModalOpen(false);
     } catch (error) {
+      toast.error('Error al editar producto, vuelve a intentarlo');
       console.error('Error al editar el producto:', error);
     }
   };
 
-  //editar usuario
+  //modificar usuario
   const handleEditarUsuario = async (
     identificacion: string,
     nombre: string,
@@ -516,15 +592,16 @@ const Home: React.FC = () => {
           },
         }
       );
-      console.log(response.data);
       fetchUsuarios();
+      toast.success('Ususario modificado con éxito!');
       setIsEditarProductoModalOpen(false);
     } catch (error) {
       console.error('Error al editar el usuario:', error);
+      toast.error('No se pudo modificar');
     }
   };
   
-  //editar ubicacion
+  //Modificar ubicacion
   const handleEditarUbicacion = async (
     id: number,
     nombre: string,
@@ -549,6 +626,7 @@ const Home: React.FC = () => {
     } catch (error) {
       console.error('Error al editar la ubicación:', error);
     }
+    toast.success('Ubicacion modificada con éxito!');
   };
 
   //modificar departamento
@@ -576,8 +654,8 @@ const Home: React.FC = () => {
     } catch (error) {
       console.error('Error al editar el departamento:', error);
     }
+    toast.success('Departamento modificado con éxito!');
   };
-  
   
   //entrada de un producto
   const handleEntrada = async (codigoProducto: string, cantidad: number, ordenCompra: string) => {
@@ -601,6 +679,7 @@ const Home: React.FC = () => {
         setError('Error al registrar el producto');
       }
     }
+    toast.success('Entrada realizadad con éxito!');
   };
 
   //salida de un producto
@@ -630,6 +709,7 @@ const Home: React.FC = () => {
         throw { message: 'Error al realizar la salida', statusCode: 500 };
       }
     }
+    toast.success('Salida realizada con éxito!');
   };
 
   //devolucion de producto
@@ -649,6 +729,7 @@ const Home: React.FC = () => {
         },
       });
       fetchProductos();
+      toast.success('Devolucion realizada con éxito!');
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 404) {
@@ -676,6 +757,7 @@ const Home: React.FC = () => {
         },
       });
       fetchProductos();
+      toast.success('Salida Particular realizada con éxito!');
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 404) {
@@ -722,6 +804,7 @@ const Home: React.FC = () => {
         },
       });
       fetchProductos();
+      toast.success('Producto agregado con éxito!');
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 404) {
@@ -747,6 +830,7 @@ const Home: React.FC = () => {
         },
       });
       fetchUbicaciones();
+      toast.success('Ubicación agregada con éxito!');
       return response.data;
     } catch (error) {
       throw { message: 'Error al realizar la acción', statusCode: 500 };
@@ -768,6 +852,7 @@ const Home: React.FC = () => {
         },
       });
       console.log(response.data);
+      toast.success('Departamento agregado con éxito!');
       fetchDepartamentos();
     } catch (error) {
       throw { message: 'Error al realizar la acción', statusCode: 500 };
@@ -795,6 +880,7 @@ const Home: React.FC = () => {
         },
       });
       fetchUsuarios();
+      toast.success('Usuario agregado con éxito!');
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 404) {
@@ -802,6 +888,33 @@ const Home: React.FC = () => {
       } else {
         throw { message: 'Error al registrar el usuario', statusCode: 500 };
       }
+    }
+  };
+
+  //agregar email de notificaciones
+  const handleEmailNuevo = async (email:string) => {
+    try {
+      const response = await axios.post('http://localhost:3000/notif', {
+        email
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      toast.success('Email agregado con éxito!');
+      fetchEmails();
+      return response.data;
+    } catch (error) {
+      toast.error('No se agregó el email');
+    }
+  };
+
+  //llama a la función de agregar emails
+  const handleAddEmail = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (email) {
+      handleEmailNuevo(email); // Llama a la función handleEmailNuevo con el email actual
+      setEmail(null); // Limpiar el input después de agregar el email
     }
   };
 
@@ -843,40 +956,75 @@ const Home: React.FC = () => {
 
   //filtros para busquedas
   const filteredEntradas = entradas.filter(entrada =>
-    entrada.codigoproducto.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    entrada.ordencompra.toLowerCase().includes(searchTerm.toLowerCase())
+    (entrada.codigoproducto && entrada.codigoproducto.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (entrada.ordencompra && entrada.ordencompra.toLowerCase().includes(searchTerm.toLowerCase()))
   );
   
   const filteredSalidas = salidas.filter(salida =>
-    salida.codigoproducto.toLowerCase().includes(searchTerm.toLowerCase())
+    (salida.codigoproducto && salida.codigoproducto.toLowerCase().includes(searchTerm.toLowerCase()))
   );
   
   const filteredDevoluciones = devoluciones.filter(devolucion =>
-    devolucion.codigoproducto.toLowerCase().includes(searchTerm.toLowerCase())
+    devolucion.codigoproducto && devolucion.codigoproducto.toLowerCase().includes(searchTerm.toLowerCase())
   );
   
   const filteredSalidasParticulares = salidasParticulares.filter(salidaParticular =>
-    salidaParticular.codigoproducto.toLowerCase().includes(searchTerm.toLowerCase())
+    salidaParticular.codigoproducto && salidaParticular.codigoproducto.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const filteredProductos = productos.filter(producto =>
-    producto.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    producto.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    producto.descripcion.toLowerCase().includes(searchTerm.toLowerCase())
+    (producto.codigo && producto.codigo.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (producto.nombre && producto.nombre.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (producto.categoria && producto.categoria.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (producto.descripcion && producto.descripcion.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const filteredUbicaciones = ubicaciones.filter(ubicacion =>
-    ubicacion.nombre.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+    ubicacion.nombre && ubicacion.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+);
 
-  const filteredDepartamentos = departamentos.filter(departamento =>
-    departamento.nombre.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+const filteredDepartamentos = departamentos.filter(departamento =>
+    departamento.nombre && departamento.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+);
 
-  const filteredBitacora = bitacora.filter(bit =>
-    bit.tipoactividad.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    bit.responsable.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+const filteredBitacora = bitacora.filter(bit =>
+    (bit.tipoactividad && bit.tipoactividad.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (bit.responsable && bit.responsable.toLowerCase().includes(searchTerm.toLowerCase()))
+);
+
+  //pasar pagina
+  const handlePageChange = (pageNumber: number) => {
+    setCurrentPage(pageNumber);
+    if (topRef.current) {
+      topRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const getPageNumbers = (num:number) => {
+    const startPage = Math.max(1, currentPage - Math.floor(4 / 2));
+    const endPage = Math.min(totalPages(num), startPage + 4 - 1);
+  
+    const pages = [];
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    return pages;
+  };
+
+  //constantes para controlar la paginación de los productos
+  const indexOfLastProduct = currentPage * productsPerPage;
+  const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
+  const currentProducts = filteredProductos.slice(indexOfFirstProduct, indexOfLastProduct);
+  //const totalPages = Math.ceil(filteredProductos.length / productsPerPage);
+  const totalPages = (num :number) => {
+    return Math.ceil(num / productsPerPage);
+  };
+
+  //constantes para controlar la paginación de la bitácora
+  const indexOfLastBitacora = currentPage * productsPerPage;
+  const indexOfFirstBitacora = indexOfLastBitacora - productsPerPage;
+  const currentBitacora = filteredBitacora.slice(indexOfFirstBitacora, indexOfLastBitacora);
+
   
   return (
     <div className="dashboard">
@@ -900,14 +1048,21 @@ const Home: React.FC = () => {
             <li><Link to="#" className={activeCategory === 'devolucionees' ? 'active' : ''} onClick={() => {fetchDevoluciones(); setActiveCategory('devoluciones'); }}>Devoluciones</Link></li>
             <li><Link to="#" className={activeCategory === 'ubicaciones' ? 'active' : ''} onClick={() => {fetchUbicaciones(); setActiveCategory('ubicaciones'); }}>Ubicaciones</Link></li>
             <li><Link to="#" className={activeCategory === 'departamentos' ? 'active' : ''} onClick={() => {fetchDepartamentos(); setActiveCategory('departamentos'); }}>Departamentos</Link></li>
-            <li><Link to="#" className={activeCategory === 'usuarios' ? 'active' : ''} onClick={() => {fetchUsuarios(); setActiveCategory('usuarios'); }}>Usuarios</Link></li>
+            {rol === 'Admin' && (
+              <li><Link to="#" className={activeCategory === 'usuarios' ? 'active' : ''} onClick={() => {fetchUsuarios(); setActiveCategory('usuarios'); }}>Usuarios</Link></li>
+            )}
+            {rol === 'Admin' && (
+              <li><Link to="#" className={activeCategory === 'emails' ? 'active' : ''} onClick={() => {fetchEmails(); setActiveCategory('emails'); }}>Email de Notificaciones</Link></li>
+            )}
+            <li><Link to="#" className={activeCategory === 'bitacora' ? 'active' : ''} onClick={() => {fetchBitacora(); setActiveCategory('bitacora'); }}>Bitácora de Actividad</Link></li>
             <li><Link to="/reportes">Reportes</Link></li>
             <li><Link to="/upload">Cargar Datos</Link></li>
-            <li><Link to="#" className={activeCategory === 'bitacora' ? 'active' : ''} onClick={() => {fetchBitacora(); setActiveCategory('bitacora'); }}>Bitácora de Actividad</Link></li>
+            <li><Export productos={productos} /></li>
           </ul>
         </nav>
       </aside>
       <main className="content">
+      <div ref={topRef}></div>
         <div className="sticky-container">
           <div className="header-title">
             <span className="product-list-header">
@@ -918,6 +1073,7 @@ const Home: React.FC = () => {
               showBitacora ? 'Bitacora de Actividad' :
               showUbicaciones ? 'Lista de Ubicaciones' :
               showUsuarios ? 'Lista de Usuarios' :
+              showEmails ? 'Lista de Emails para Notificaciones' :
               showDepartamentos ? 'Lista de Departamentos' :
               'Lista de Productos'}
             </span>
@@ -932,6 +1088,11 @@ const Home: React.FC = () => {
                 onChange={handleSearchChange}
                 className="search-bar"
               />
+              <div className="product-buttons">
+                <button onClick={() => {setSearchTerm(''); handlePageChange(1)}}>
+                  Limpiar
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -942,8 +1103,20 @@ const Home: React.FC = () => {
             {activeCategory === 'ubicaciones' && (
               <button className="add-product-button" onClick={() => setIsUbicacionModalOpen(true)}>Agregar Ubicación</button>
             )}
-            {activeCategory === 'ubicaciones' && (
-              <button className="add-product-button" onClick={() => setIsUbicacionModalOpen(true)}>Agregar Ubicación</button>
+            {activeCategory === 'emails' && (
+              <form onSubmit={handleAddEmail} className="email-form">
+                <input
+                  type="email"
+                  placeholder="Agregar Email"
+                  value={email || ''}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+                <button type="submit">Agregar</button>
+              </form>
+            )}
+            {activeCategory === 'usuarios' && (
+              <button className="add-product-button" onClick={() => setIsUsuarioModalOpen(true)}>Agregar Usuario</button>
             )}
         </div>
 
@@ -1032,7 +1205,7 @@ const Home: React.FC = () => {
           ) : showBitacora ? (
             filteredBitacora.length > 0 ? (
               <div className="product-grid">
-                {filteredBitacora.map((registro) => (
+                {currentBitacora.map((registro) => (
                   <div key={registro.id} className="product-item">
                     <div className="product-column">
                       <p><strong>Usuario ID:</strong> {registro.usuarioid}</p>
@@ -1053,9 +1226,6 @@ const Home: React.FC = () => {
           ) : showUsuarios ? (
             usuarios.length > 0 ? (
               <>
-                <div className="contenedor-botones">
-                  <button className="add-product-button" onClick={() => setIsUsuarioModalOpen(true)}>Agregar Usuario</button>
-                </div>
                 <div className="product-grid">
                   {usuarios.map((usuario) => (
                     <div key={usuario.id} className="product-item">
@@ -1067,9 +1237,9 @@ const Home: React.FC = () => {
                       </div>
                       <div className="products-buttons-column">
                         <div className="product-buttons">
-                          <button onClick={() => handleOpenEditarUsuarioModal(usuario)}>Modificar</button>
+                          <button className="modificar-button" onClick={() => handleOpenEditarUsuarioModal(usuario)}>Modificar</button>
+                          <button className="modificar-button" onClick={() => handleDeleteUsuario(usuario.id)}>Eliminar</button>
                         </div>
-                        <button className="delete-product-button" onClick={() => handleDeleteUsuario(usuario.id)}>Eliminar</button>
                       </div>
                     </div>
                   ))}
@@ -1091,9 +1261,9 @@ const Home: React.FC = () => {
                         </div>
                         <div className="products-buttons-column">
                           <div className="product-buttons">
-                            <button onClick={() => handleOpenEditarDataModal(ubicacion)}>Modificar</button>
+                            <button className="modificar-button" onClick={() => handleOpenEditarDataModal(ubicacion)}>Modificar</button>
+                            <button className="modificar-button" onClick={() => handleDeleteUbicacion(ubicacion.nombre)}>Eliminar</button>
                           </div>
-                          <button className="delete-product-button" onClick={() => handleDeleteUbicacion(ubicacion.nombre)}>Eliminar</button>
                         </div>
                       </div>
                     ))}
@@ -1102,8 +1272,7 @@ const Home: React.FC = () => {
               ) : (
                 <p>No hay ubicaciones disponibles.</p>
               )
-          ) : 
-          showDepartamentos ? (
+            ) : showDepartamentos ? (
               filteredDepartamentos.length > 0 ? (
                 <>
                   <div className="product-grid">
@@ -1116,9 +1285,9 @@ const Home: React.FC = () => {
                         </div>
                         <div className="products-buttons-column">
                           <div className="product-buttons">
-                            <button onClick={() => handleOpenEditarDepModal(departamento)}>Modificar</button>
+                            <button className="modificar-button" onClick={() => handleOpenEditarDepModal(departamento)}>Modificar</button>
+                            <button className="modificar-button" onClick={() => handleDeleteDepartamento(departamento.nombre)}>Eliminar</button>
                           </div>
-                          <button className="delete-product-button" onClick={() => handleDeleteDepartamento(departamento.nombre)}>Eliminar</button>
                         </div>
                       </div>
                     ))}
@@ -1127,24 +1296,48 @@ const Home: React.FC = () => {
               ) : (
                 <p>No hay departamentos disponibles.</p>
               )
+            ) : showEmails ? (
+              emails.length > 0 ? (
+                <>
+                  <div className="product-grid">
+                    {emails.map((email) => (
+                      <div key={email.id} className="product-item">
+                        <div className="product-column">
+                          <p><strong>Email:</strong> {email.email}</p>
+                        </div>
+                        <div className="products-buttons-column">
+                          <div className="product-buttons">
+                            <button className="modificar-button" onClick={() => handleDeleteEmail(email.id)}>Eliminar</button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <p>No hay ubicaciones disponibles.</p>
+              )
           ) : (
             filteredProductos.length > 0 ? (
               <>
-                <div className="contenedor-botones">
-                  <button className="add-product-button" onClick={() => setIsProductoModalOpen(true)}>Agregar Producto Nuevo</button>
-                  <button className="add-product-button" onClick={() => setIsDevolucionModalOpen(true)}>Devolución</button>
-                  <button className="add-product-button" onClick={() => setIsSalidaParticularModalOpen(true)}>Salida Particular</button>
-                  <button className="add-product-button" style={{ backgroundColor: '#7a2a20', color: 'white' }} onClick={() => cantidadMinima()}>Inventario Minimo</button>
+                <div className="Product-header">
+                  <div className="contenedor-botones">
+                    <button className="add-product-button" onClick={() => setIsProductoModalOpen(true)}>Agregar Producto Nuevo</button>
+                    <button className="add-product-button" onClick={() => setIsDevolucionModalOpen(true)}>Devolución</button>
+                    <button className="add-product-button" onClick={() => setIsSalidaParticularModalOpen(true)}>Salida Particular</button>
+                    <button className="add-product-button" style={{ backgroundColor: '#7a2a20', color: 'white' }} onClick={() => cantidadMinima()}>Inventario Minimo</button>
+                  </div>
                 </div>
+
                 <div className="product-grid">
-                  {filteredProductos.map((producto) => (
+                  {currentProducts.map((producto) => (
                     <div key={producto.id} className="product-item">
                       <div className="product-column">
                         <p><strong>Código:</strong> {producto.codigo}</p>
                         <p><strong>Nombre:</strong> {producto.nombre}</p>
                         <p><strong>Cantidad:</strong> {producto.cantidad}</p>
                         <p><strong>Cantidad Mínima:</strong> {producto.cantidadminima}</p>
-                        <p><strong>Descripción:</strong> {producto.descripcion.length > 85 ? `${producto.descripcion.substring(0, 85)}...` : producto.descripcion}</p>
+                        <p><strong>Descripción:</strong> {producto.descripcion && producto.descripcion.length > 85 ? `${producto.descripcion.substring(0, 85)}...` : producto.descripcion}</p>
                       </div>
                       <div className="product-column">
                         <p><strong>Ubicación:</strong> {producto.ubicacion}</p>
@@ -1155,21 +1348,52 @@ const Home: React.FC = () => {
                       </div>
                       <div className="product-buttons-column">
                         <div className="product-buttons">
-                          <button onClick={() => handleOpenEntradaModal(producto.codigo, producto.nombre)}>Entrada</button>
-                          <button onClick={() => handleOpenSalidaModal(producto.codigo, producto.nombre)}>Salida</button>
-                          <button onClick={() => handleOpenEditarProductoModal(producto)}>Editar</button>
+                          <button className="entrada-button" onClick={() => handleOpenEntradaModal(producto.codigo, producto.nombre)}>Entrada</button>
+                          <button className="salida-button" onClick={() => handleOpenSalidaModal(producto.codigo, producto.nombre)}>Salida</button>
+                          <button className="modificar-button" onClick={() => handleOpenEditarProductoModal(producto)}>Modificar</button>
+                          {rol === 'Admin' && (
+                            <button className="modificar-button" onClick={() => handleDelete(producto.codigo)}>Eliminar</button>
+                          )}
                         </div>
-                        <button className="delete-product-button" onClick={() => handleDelete(producto.codigo)}>Eliminar</button>
                       </div>
                     </div>
                   ))}
                 </div>
+                  
               </>
             ) : (
               <p>No hay productos disponibles.</p>
             )
           )}
-          
+          <div className="pagination">
+            <button
+              onClick={() => handlePageChange(1)}
+              disabled={currentPage === 1}
+            >
+              Inicio
+            </button>
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              Anterior
+            </button>
+            {getPageNumbers(filteredProductos.length).map((number) => (
+              <button
+                key={number}
+                onClick={() => handlePageChange(number)}
+                className={currentPage === number ? 'active' : ''}
+              >
+                {number}
+              </button>
+            ))}
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages(filteredProductos.length)}
+            >
+              Siguiente
+            </button>
+          </div>
         </div>
 
       </main>

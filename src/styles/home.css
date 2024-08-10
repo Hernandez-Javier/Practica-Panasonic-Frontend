@@ -168,7 +168,7 @@ body {
   font-size: 12px;
 }
 
-/* Estilos para los botones */
+/* Estilos para los botones bajo la barra de busqueda */
 .add-product-button {
   background-color: #34495e;
   color: white;
@@ -241,7 +241,7 @@ body {
   gap: 5px; /* Reducción del espacio entre botones */
 }
 
-.product-buttons button, .delete-product-button{
+.product-buttons button{
   padding: 6px; /* Reducción del padding */
   cursor: pointer;
   width: 80px; /* Reducción del ancho */
@@ -252,16 +252,33 @@ body {
   text-align: center;
 }
 
+.product-buttons .entrada-button {
+  background-color: green;
+}
+
+.product-buttons .salida-button {
+  background-color: #9b3429;
+}
+
+.product-buttons .modificar-button {
+  background-color: #34495e;
+}
+
+.product-buttons .eliminar-button {
+  background-color: #9b3429;
+}
+
 .product-buttons button:hover {
   background-color: #0056b3;
 }
 
-.delete-product-button {
-  margin-top: 5px;
+.product-buttons .entrada-button:hover{
+  background-color: rgb(2, 90, 2);
 }
 
-.delete-product-button:hover {
-  background-color: #9b3429;
+.product-buttons .eliminar-button:hover,
+.product-buttons .salida-button:hover{
+  background-color: #681e15;
 }
 
 /* Estilos del contenedor de productos */
@@ -277,4 +294,54 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
+}
+
+/*Estilos parael input de los emails nuevos*/
+
+.email-form {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.email-form input {
+  width: 300px;
+  padding: 8px;
+  border: 2px solid #ccd8e9;
+  border-radius: 4px;
+  margin-right: 10px;
+}
+
+.email-form button {
+  padding: 8px 12px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.email-form button:hover {
+  background-color: #0056b3;
+}
+
+/* estilos para los botones de paginación */
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.pagination button {
+  margin: 0 5px;
+  padding: 10px;
+  border: none;
+  background-color: #f0f0f0;
+  cursor: pointer;
+}
+
+.pagination button.active {
+  background-color: #007bff;
+  color: white;
 }

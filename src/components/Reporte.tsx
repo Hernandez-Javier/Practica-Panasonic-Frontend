@@ -66,8 +66,6 @@ const Home: React.FC = () => {
   const [showEntradas, setShowEntradas] = useState(false); //estado para mostrar entradas
   const [salidas, setSalidas] = useState<any[]>([]);//estado para las salidas
   const [showSalidas, setShowSalidas] = useState(false);//estado para mostrar las salidas
-  const [devoluciones, setDevoluciones] = useState<any[]>([]);//estado para las devoluciones
-  const [salidasParticulares, setSalidasParticulares] = useState<any[]>([]);//estado para las devoluciones
   const [ubicaciones, setUbicaciones] = useState<any[]>([]);//estado para las ubicaciones
   const [departamentos, setDepartamentos] = useState<any[]>([]);//estado para los departamentos
   const [error, setError] = useState('');
@@ -87,8 +85,12 @@ const Home: React.FC = () => {
   const [reportSalida, setReportSalida] = useState<ReportData[]>([]);
   const [totalUSDP, settotalUSDP] = useState(0);
   const [totalCRCP, settotalCRCP] = useState(0);
+  const [totalUSDP2, settotalUSDP2] = useState(0);
+  const [totalCRCP2, settotalCRCP2] = useState(0);
   const [totalCantidad, settotalCantidad] = useState(0);
+  const [totalCantidadP, settotalCantidadP] = useState(0);
   const [reportProducto, setReportProducto] = useState<ReportDataProducto[]>([]);
+  const [reportProducto2, setReportProducto2] = useState<ReportData[]>([]);
   //grafico
   const [showChartSalidas, setShowChartSalidas] = useState(false);
   const [showChartEntradas, setShowChartEntradas] = useState(false);
@@ -258,7 +260,7 @@ const Home: React.FC = () => {
       (!endDateObj || salidaDate <= endDateObj);
   
     const departamentoFilter = !selectedDepartamento || salida.destino === selectedDepartamento;
-  
+
     return dateFilter && departamentoFilter;
   });
   
@@ -273,6 +275,61 @@ const Home: React.FC = () => {
     return dateFilter;
   });
 
+  const filteredSalidasGraph = salidas.filter((salida) => {
+    const salidaDate = new Date(salida.fecha);
+    let startDateObj = startDate ? new Date(startDate) : null;
+    let endDateObj = endDate ? new Date(endDate) : null;
+  
+    const dateFilter = (!startDateObj || salidaDate >= startDateObj) &&
+      (!endDateObj || salidaDate <= endDateObj);
+  
+    return dateFilter;
+  });
+
+  //reporte de lista de productos de una ubicacion
+  const calculateReportByLocation = (
+    productos: Producto[],
+    selectedUbicacion: string
+  ): {
+    reportData: ReportData[],
+    totalGlobalColones2: number,
+    totalGlobalDolares2: number,
+    totalGlobalCantidadProducto: number
+  } => {
+    const filteredProductos = productos.filter(
+      (producto) => producto.ubicacion === selectedUbicacion
+    );
+  
+    let totalGlobalColones2 = 0;
+    let totalGlobalDolares2 = 0;
+    let totalGlobalCantidadProducto = 0;
+  
+    const reportData = filteredProductos.map((producto) => {
+      const totalColones = producto.cantidad * producto.preciounidadcol;
+      const totalDolares = producto.cantidad * producto.preciounidadusd;
+  
+      totalGlobalColones2 += totalColones;
+      totalGlobalDolares2 += totalDolares;
+      totalGlobalCantidadProducto += producto.cantidad;
+  
+      return {
+        codigo: producto.codigo,
+        nombre: producto.nombre,
+        cantidadTotal: producto.cantidad,
+        totalColones,
+        totalDolares,
+      };
+    });
+  
+    return {
+      reportData,
+      totalGlobalColones2,
+      totalGlobalDolares2,
+      totalGlobalCantidadProducto,
+    };
+  };  
+
+  //reporte de total de cantidad de productos agrupados por ubicacion
   const calculateReportProducto = (productos: Producto[]): { 
     reportData: ReportDataProducto[], 
     totalGlobalColones: number, 
@@ -416,11 +473,18 @@ const Home: React.FC = () => {
     settotalCantidadE(totalGlobalCantidadEntrada);
   
     // Reporte de productos por ubicación
-    const { reportData: reportProductos, totalGlobalColones, totalGlobalDolares, totalGlobalCantidad } = calculateReportProducto(filteredProductos);
+    const { reportData: reportProductos, totalGlobalColones, totalGlobalDolares, totalGlobalCantidad } = calculateReportProducto(productos);
     setReportProducto(reportProductos);
     settotalCRCP(totalGlobalColones);
     settotalUSDP(totalGlobalDolares);
     settotalCantidad(totalGlobalCantidad);
+
+    // Reporte de productos por ubicación
+    const { reportData: reportProductos2, totalGlobalColones2, totalGlobalDolares2, totalGlobalCantidadProducto } = calculateReportByLocation(filteredProductos, selectedUbicacion);
+    setReportProducto2(reportProductos2);
+    settotalCRCP2(totalGlobalColones2);
+    settotalUSDP2(totalGlobalDolares2);
+    settotalCantidadP(totalGlobalCantidadProducto);
   };
   
   //calcula las ubicaciones top en productos para el grafico
@@ -482,7 +546,7 @@ const Home: React.FC = () => {
     };
   };
 
-  const { topDepartamentos, cantidadesD } = useMemo(() => calculateTopDepartamentos(filteredSalidas), [filteredSalidas]);
+  const { topDepartamentos, cantidadesD } = useMemo(() => calculateTopDepartamentos(filteredSalidasGraph), [filteredSalidasGraph]);
   const { topProductos, cantidadesP } = useMemo(() => calculateTopProductos(filteredEntradas), [filteredEntradas]);
   const { topUbicaciones, cantidadesU } = useMemo(() => calculateTopUbicaciones(productos), [productos]);
 
@@ -526,14 +590,28 @@ const Home: React.FC = () => {
   };
 
   // Opciones del gráfico
-  const options = {
+  const options = (title:any) => ({
+    plugins: {
+      title: {
+        display: true,
+        text: title,
+        font: {
+          size: 18,
+        },
+        padding: {
+          top: 10,
+          bottom: 30,
+        },
+      },
+    },
     responsive: true,
     scales: {
       y: {
         beginAtZero: true,
       },
     },
-  };
+    maintainAspectRatio: false,
+  });
 
   return (
     <div className="dashboard">
@@ -558,240 +636,206 @@ const Home: React.FC = () => {
         </nav>
       </aside>
 
-
       <main className="content">
-        <div className="product-list">
-        <div className="filters">
-          {(activeCategory === 'salidas' || activeCategory === 'entradas') && (
-            <div>
-              <label>Desde: </label>
-              <input type="date" value={startDate} onChange={handleStartDateChange} />
-              <label>Hasta: </label>
-              <input type="date" value={endDate} onChange={handleEndDateChange} />
-            </div>
-          )}
-          {activeCategory === 'salidas' && (
-            <select value={selectedDepartamento} onChange={(e) => setSelectedDepartamento(e.target.value)}>
-              <option value="">Todos los departamentos</option>
-              {departamentos.map((dep) => (
-                <option key={dep.id} value={dep.nombre}>
-                  {dep.nombre}
-                </option>
-              ))}
-            </select>
-          )}
-          {activeCategory === 'productos' && (
-            <select value={selectedUbicacion} onChange={(e) => setSelectedUbicacion(e.target.value)}>
-              <option value="">Todos las ubicaciones</option>
-              {ubicaciones.map((ubi) => (
-                <option key={ubi.id} value={ubi.nombre}>
-                  {ubi.nombre}
-                </option>
-              ))}
-            </select>
-          )}
-          <div className="contenedor-botones">
-            <button className="add-product-button" onClick={handleGenerateReport}>Generar Reporte</button>
-            {activeCategory === 'salidas' && (
-              <button className="add-product-button" onClick={()=>setShowChartSalidas(!showChartSalidas)}>Grafico Salidas por Departamentos</button>
+        <div>
+          <div className="filters">
+            {(activeCategory === 'salidas' || activeCategory === 'entradas') && (
+              <div>
+                <label>Desde: </label>
+                <input type="date" value={startDate} onChange={handleStartDateChange} />
+                <label>Hasta: </label>
+                <input type="date" value={endDate} onChange={handleEndDateChange} />
+              </div>
             )}
-            {activeCategory === 'entradas' && (
-              <button className="add-product-button" onClick={()=>setShowChartEntradas(!showChartEntradas)}>Grafico Entradas por Productos</button>
+            {activeCategory === 'salidas' && (
+              <select className="search-bar" value={selectedDepartamento} onChange={(e) => setSelectedDepartamento(e.target.value)}>
+                <option value="">Todos los departamentos</option>
+                {departamentos.map((dep) => (
+                  <option key={dep.id} value={dep.nombre}>
+                    {dep.nombre}
+                  </option>
+                ))}
+              </select>
             )}
             {activeCategory === 'productos' && (
-              <button className="add-product-button" onClick={()=>setShowChartProductos(!showChartProductos)}>Grafico Productos por Ubicaciones</button>
-            )}
-          </div>
-        </div>
-          {showEntradas ? (
-            filteredEntradas.length > 0 ? (
               <>
-              {reportEntrada.length > 0 ? (
-                <>
-                  <h2>Reporte de Entradas</h2>
-                  <table className="report-table">
-                    <thead>
-                      <tr>
-                        <th>Código del Producto</th>
-                        <th>Nombre del Producto</th>
-                        <th>Cantidad Total</th>
-                        <th>Total en Colones</th>
-                        <th>Total en Dólares</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {reportEntrada.map((data) => (
-                        <tr key={data.codigo}>
-                          <td>{data.codigo}</td>
-                          <td>{data.nombre}</td>
-                          <td>{data.cantidadTotal}</td>
-                          <td>{data.totalColones.toFixed(2)}</td>
-                          <td>{data.totalDolares.toFixed(2)}</td>
-                        </tr>
-                      ))}
-                      <tr>
-                        <td colSpan={2} style={{ textAlign: 'right', fontWeight: 'bold' }}>Totales Globales:</td>
-                        <td style={{ fontWeight: 'bold' }}>{totalCantidadE.toFixed(2)}</td>
-                        <td style={{ fontWeight: 'bold' }}>{totalCRC.toFixed(2)}</td>
-                        <td style={{ fontWeight: 'bold' }}>{totalUSD.toFixed(2)}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                  {activeCategory === 'entradas' && showChartEntradas && (
-                    <Bar data={dataEntradasChart} options={options} />
-                  )}
-                </>
-              ) : (
-                <p>Genera un reporte de entradas.</p>
-              )}
-              <h2>Entradas</h2>
-              <div className="product-grid">
-                {filteredEntradas.map((entrada) => (
-                  <div key={entrada.id} className="product-item">
-                    <div className="product-column">
-                      <p><strong>Código:</strong> {entrada.codigoproducto}</p>
-                      <p><strong>Cantidad:</strong> {entrada.cantidad}</p>
-                      <p><strong>Orden de Compra:</strong> {entrada.ordencompra}</p>
-                    </div>
-                    <div className="product-column">
-                      <p><strong>Fecha:</strong> {formatDate(entrada.fecha)}</p>
-                      <p><strong>Responsable:</strong> {entrada.responsable}</p>
-                    </div>
-                  </div>
+              <label>Selecciona una ubicacion para filtrar los productos</label>
+              <select className="search-bar" value={selectedUbicacion} onChange={(e) => setSelectedUbicacion(e.target.value)}>
+                <option value="">Todos las ubicaciones</option>
+                {ubicaciones.map((ubi) => (
+                  <option key={ubi.id} value={ubi.nombre}>
+                    {ubi.nombre}
+                  </option>
                 ))}
-              </div>
-            </>
-            ) : (
-              <p>No hay entradas disponibles.</p>
-            )
-          ) : showSalidas ? (
-            filteredSalidas.length > 0 ? (
-              <>
-              {reportSalida.length > 0 ? (
-                <>
-                  <h2>Reporte de Salidas</h2>
-                  <table className="report-table">
-                    <thead>
-                      <tr>
-                        <th>Código del Producto</th>
-                        <th>Nombre del Producto</th>
-                        <th>Cantidad Total</th>
-                        <th>Total en Colones</th>
-                        <th>Total en Dólares</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {reportSalida.map((data) => (
-                        <tr key={data.codigo}>
-                          <td>{data.codigo}</td>
-                          <td>{data.nombre}</td>
-                          <td>{data.cantidadTotal}</td>
-                          <td>{data.totalColones.toFixed(2)}</td>
-                          <td>{data.totalDolares.toFixed(2)}</td>
-                        </tr>
-                      ))}
-                      <tr>
-                        <td colSpan={2} style={{ textAlign: 'right', fontWeight: 'bold' }}>Totales Globales:</td>
-                        <td style={{ fontWeight: 'bold' }}>{totalCantidadS.toFixed(2)}</td>
-                        <td style={{ fontWeight: 'bold' }}>{totalCRCS.toFixed(2)}</td>
-                        <td style={{ fontWeight: 'bold' }}>{totalUSDS.toFixed(2)}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                  {activeCategory === 'salidas' && showChartSalidas && (
-                    <Bar data={dataSalidasChart} options={options} />
-                  )}
-                </>
-              ) : (
-                <p>Genera un reporte de salidas.</p>
-              )}
-                <h2>Salidas</h2>
-                <div className="product-grid">
-                  {filteredSalidas.map((salida) => (
-                    <div key={salida.id} className="product-item">
-                      <div className="product-column">
-                        <p><strong>Código:</strong> {salida.codigoproducto}</p>
-                        <p><strong>Cantidad:</strong> {salida.cantidad}</p>
-                        <p><strong>Destino:</strong> {salida.destino}</p>
-                      </div>
-                      <div className="product-column">
-                        <p><strong>Solicitante:</strong> {salida.solicitante}</p>
-                        <p><strong>Fecha:</strong> {formatDate(salida.fecha)}</p>
-                        <p><strong>Responsable:</strong> {salida.responsable}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              </select>
               </>
-            ) : (
-              <p>No hay salidas disponibles.</p>
-            )
-          ) : (
-            filteredProductos.length > 0 ? (
+            )}
+            <div className="contenedor-botones">
+              <button className="add-product-button" onClick={handleGenerateReport}>Generar Reporte</button>
+              {activeCategory === 'salidas' && (
+                <button className="add-product-button" onClick={()=>setShowChartSalidas(!showChartSalidas)}>Grafico Salidas por Departamentos</button>
+              )}
+              {activeCategory === 'entradas' && (
+                <button className="add-product-button" onClick={()=>setShowChartEntradas(!showChartEntradas)}>Grafico Entradas por Productos</button>
+              )}
+              {activeCategory === 'productos' && (
+                <button className="add-product-button" onClick={()=>setShowChartProductos(!showChartProductos)}>Grafico Productos por Ubicaciones</button>
+              )}
+            </div>
+
+          </div>
+          {showEntradas ? (
+            filteredEntradas.length > 0 && reportEntrada.length > 0 && !showChartEntradas &&(
               <>
-              <div className="contenedor-botones">
-                <button className="add-product-button" style={{ backgroundColor: '#7a2a20', color: 'white' }} onClick={() => cantidadMinima()}>Inventario Minimo</button>
-              </div>
-              {reportProducto.length > 0 ? (
-                <>
+                <h2>Reporte de Entradas</h2>
                 <table className="report-table">
                   <thead>
                     <tr>
-                      <th>Ubicación</th>
-                      <th>Cantidad Total de Productos</th>
+                      <th>Código del Producto</th>
+                      <th>Nombre del Producto</th>
+                      <th>Cantidad Total</th>
                       <th>Total en Colones</th>
                       <th>Total en Dólares</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {reportProducto.map((datos) => (
-                      <tr key={datos.ubicacion}>
-                        <td>{datos.ubicacion}</td>
-                        <td>{datos.cantidadTotal}</td>
-                        <td>{datos.totalColones.toFixed(2)}</td>
-                        <td>{datos.totalDolares.toFixed(2)}</td>
+                    {reportEntrada.map((data) => (
+                      <tr key={data.codigo}>
+                        <td>{data.codigo}</td>
+                        <td>{data.nombre}</td>
+                        <td>{data.cantidadTotal}</td>
+                        <td>{data.totalColones.toFixed(2)}</td>
+                        <td>{data.totalDolares.toFixed(2)}</td>
                       </tr>
                     ))}
                     <tr>
-                      <td colSpan={1} style={{ textAlign: 'right', fontWeight: 'bold' }}>Totales Globales:</td>
-                      <td style={{ fontWeight: 'bold' }}>{totalCantidad.toFixed(2)}</td>
-                      <td style={{ fontWeight: 'bold' }}>{totalCRCP.toFixed(2)}</td>
-                      <td style={{ fontWeight: 'bold' }}>{totalUSDP.toFixed(2)}</td>
+                      <td colSpan={2} style={{ textAlign: 'right', fontWeight: 'bold' }}>Totales Globales:</td>
+                      <td style={{ fontWeight: 'bold' }}>{totalCantidadE.toFixed(2)}</td>
+                      <td style={{ fontWeight: 'bold' }}>{totalCRC.toFixed(2)}</td>
+                      <td style={{ fontWeight: 'bold' }}>{totalUSD.toFixed(2)}</td>
                     </tr>
                   </tbody>
                 </table>
-                {activeCategory === 'productos' && showChartProductos && (
-                  <Bar data={dataProductosChart} options={options} />
-                )}
-                </>
-              ) : (
-                <p>Genera un reporte de productos.</p>
-              )}
-                <div className="product-grid">
-                  {filteredProductos.map((producto) => (
-                    <div key={producto.id} className="product-item">
-                      <div className="product-column">
-                        <p><strong>Código:</strong> {producto.codigo}</p>
-                        <p><strong>Nombre:</strong> {producto.nombre}</p>
-                        <p><strong>Cantidad:</strong> {producto.cantidad}</p>
-                        <p><strong>Cantidad Mínima:</strong> {producto.cantidadminima}</p>
-                        <p><strong>Descripción:</strong> {producto.descripcion.length > 85 ? `${producto.descripcion.substring(0, 85)}...` : producto.descripcion}</p>
-                      </div>
-                      <div className="product-column">
-                        <p><strong>Ubicación:</strong> {producto.ubicacion}</p>
-                        <p><strong>Precio Unidad ₡:</strong> {producto.preciounidadcol}</p>
-                        <p><strong>Precio Unidad $:</strong> {producto.preciounidadusd}</p>
-                        <p><strong>Total ₡:</strong> {producto.preciototalcol}</p>
-                        <p><strong>Total $:</strong> {producto.preciototalusd}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
               </>
-            ) : (
-              <p>No hay productos disponibles.</p>
             )
+          ) : showSalidas ? (
+            filteredSalidas.length > 0 && reportSalida.length > 0 && !showChartSalidas &&(
+              <>
+                <h2>Reporte de Salidas</h2>
+                <table className="report-table">
+                  <thead>
+                    <tr>
+                      <th>Código del Producto</th>
+                      <th>Nombre del Producto</th>
+                      <th>Cantidad Total</th>
+                      <th>Total en Colones</th>
+                      <th>Total en Dólares</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {reportSalida.map((data) => (
+                      <tr key={data.codigo}>
+                        <td>{data.codigo}</td>
+                        <td>{data.nombre}</td>
+                        <td>{data.cantidadTotal}</td>
+                        <td>{data.totalColones.toFixed(2)}</td>
+                        <td>{data.totalDolares.toFixed(2)}</td>
+                      </tr>
+                    ))}
+                    <tr>
+                      <td colSpan={2} style={{ textAlign: 'right', fontWeight: 'bold' }}>Totales Globales:</td>
+                      <td style={{ fontWeight: 'bold' }}>{totalCantidadS.toFixed(2)}</td>
+                      <td style={{ fontWeight: 'bold' }}>{totalCRCS.toFixed(2)}</td>
+                      <td style={{ fontWeight: 'bold' }}>{totalUSDS.toFixed(2)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </>
+            )
+          ) : (
+            <>
+              {!selectedUbicacion && !showChartProductos && productos.length > 0 && reportProducto.length > 0 && (
+                <>
+                  <h2>Reporte de Productos</h2>
+                  <table className="report-table">
+                    <thead>
+                      <tr>
+                        <th>Ubicación</th>
+                        <th>Cantidad Total de Productos</th>
+                        <th>Total en Colones</th>
+                        <th>Total en Dólares</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {reportProducto.map((datos) => (
+                        <tr key={datos.ubicacion}>
+                          <td>{datos.ubicacion}</td>
+                          <td>{datos.cantidadTotal}</td>
+                          <td>{datos.totalColones.toFixed(2)}</td>
+                          <td>{datos.totalDolares.toFixed(2)}</td>
+                        </tr>
+                      ))}
+                      <tr>
+                        <td colSpan={1} style={{ textAlign: 'right', fontWeight: 'bold' }}>Totales Globales:</td>
+                        <td style={{ fontWeight: 'bold' }}>{totalCantidad.toFixed(2)}</td>
+                        <td style={{ fontWeight: 'bold' }}>{totalCRCP.toFixed(2)}</td>
+                        <td style={{ fontWeight: 'bold' }}>{totalUSDP.toFixed(2)}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  
+                </>
+              )}
+              {!showChartProductos && selectedUbicacion && reportProducto2.length > 0 && (
+                <>
+                  <h2>Productos en {selectedUbicacion}</h2>
+                  <table className="report-table">
+                    <thead>
+                      <tr>
+                        <th>Código del Producto</th>
+                        <th>Nombre del Producto</th>
+                        <th>Cantidad</th>
+                        <th>Total en Colones</th>
+                        <th>Total en Dólares</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {reportProducto2.map((producto) => (
+                        <tr key={producto.codigo}>
+                          <td>{producto.codigo}</td>
+                          <td>{producto.nombre}</td>
+                          <td>{producto.cantidadTotal}</td>
+                          <td>{producto.totalColones.toFixed(2)}</td>
+                          <td>{producto.totalDolares.toFixed(2)}</td>
+                        </tr>
+                      ))}
+                      <tr>
+                      <td colSpan={2} style={{ textAlign: 'right', fontWeight: 'bold' }}>Totales Globales:</td>
+                        <td style={{ fontWeight: 'bold' }}>{totalCantidadP.toFixed(2)}</td>
+                        <td style={{ fontWeight: 'bold' }}>{totalCRCP2.toFixed(2)}</td>
+                        <td style={{ fontWeight: 'bold' }}>{totalUSDP2.toFixed(2)}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </>
+              )}
+            </>
           )}
+          {activeCategory === 'productos' && showChartProductos && (
+                <div style={{ width: '1500px', height: '720px'}}>
+                  <Bar data={dataProductosChart} options={options('Top Ubicaciones con mayor cantidad de Productos')} />
+                </div>
+              )}
+              {activeCategory === 'salidas' && showChartSalidas && (
+                  <div style={{ width: '1500px', height: '720px'}}>
+                    <Bar data={dataSalidasChart} options={options('Top Departamentos con mayores Salidas')} />
+                  </div>
+              )}
+              {activeCategory === 'entradas' && showChartEntradas && (
+                  <div style={{ width: '1500px', height: '720px'}}>
+                    <Bar data={dataEntradasChart} options={options('Top Productos con mayores Entradas')} />
+                  </div>
+              )}
         </div>
       </main>
     </div>

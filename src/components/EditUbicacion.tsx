@@ -5,6 +5,8 @@ import axios from 'axios';
 
 Modal.setAppElement('#root');
 
+const token = localStorage.getItem('token');
+
 interface ModalModificarEntidadProps {
   isOpen: boolean;
   onRequestClose: () => void;
@@ -12,7 +14,7 @@ interface ModalModificarEntidadProps {
   id: number;
   nombre: string;
   descripcion: string;
-  entidad: string; // Nueva prop para diferenciar entre ubicación y departamento
+  entidad: string; // prop para diferenciar entre ubicación y departamento
 }
 
 const ModalModificarEntidad: React.FC<ModalModificarEntidadProps> = ({
@@ -57,12 +59,35 @@ const ModalModificarEntidad: React.FC<ModalModificarEntidadProps> = ({
     });
   };
 
+  const verificarDataExistente = async (nombre: string) => {
+    try {
+      const endpoint = entidad === 'Ubicacion' ? 'ubicaciones' : 'departamentos';
+      const response = await axios.get(`http://localhost:3000/${endpoint}/all`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = response.data;
+      // Comprobar que el nombre existe en una entidad diferente
+      return data.some((dep: any) => dep.nombre === nombre && dep.id !== formData.id);
+    } catch (error) {
+      console.error('Error al verificar la data', error);
+      return false;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const { id, nombre, descripcion } = formData;
 
     if (!nombre.trim()) {
       setError('Por favor complete todos los campos.');
+      return;
+    }
+
+    const dataExistente = await verificarDataExistente(nombre);
+    if (dataExistente) {
+      setError('El nombre ya existe.');
       return;
     }
 

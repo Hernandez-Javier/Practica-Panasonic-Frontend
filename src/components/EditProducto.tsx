@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import {jwtDecode} from 'jwt-decode';
 import Modal from 'react-modal';
 import axios from 'axios';
 import '../styles/modalES.css';
-
-const token = localStorage.getItem('token');
 
 Modal.setAppElement('#root');
 
@@ -53,7 +52,7 @@ const ModalEditar: React.FC<ModalEditarProps> = ({
     codigo: '',
     nombre: '',
     descripcion: '',
-    ubicacionId: 0, // ID de la ubicación
+    ubicacionId: 0,
     proveedor: '',
     cantidad: 0,
     cantidadMinima: 0,
@@ -63,6 +62,10 @@ const ModalEditar: React.FC<ModalEditarProps> = ({
   });
 
   const [ubicaciones, setUbicaciones] = useState<{ id: number; nombre: string; descripcion: string }[]>([]);
+  const [isUbicacionesLoaded, setIsUbicacionesLoaded] = useState(false);
+
+  const token = localStorage.getItem('token');
+  let rol = '';
 
   const fetchUbicaciones = async () => {
     try {
@@ -72,6 +75,7 @@ const ModalEditar: React.FC<ModalEditarProps> = ({
         },
       });
       setUbicaciones(response.data);
+      setIsUbicacionesLoaded(true); // Marcar como cargado
     } catch (error) {
       console.error('Error fetching ubicaciones:', error);
     }
@@ -80,7 +84,20 @@ const ModalEditar: React.FC<ModalEditarProps> = ({
   useEffect(() => {
     if (isOpen) {
       fetchUbicaciones();
-      // Inicializar el formulario con los datos proporcionados
+    }
+  }, [isOpen]);
+
+  if (token) {
+    try {
+      const decodedToken: any = jwtDecode(token);
+      rol = decodedToken.rol;
+    } catch (error) {
+      console.error('Error decodificando el token:', error);
+    }
+  }
+
+  useEffect(() => {
+    if (isOpen && isUbicacionesLoaded) {
       setFormData({
         codigo: codigo || '',
         nombre: nombre || '',
@@ -93,22 +110,8 @@ const ModalEditar: React.FC<ModalEditarProps> = ({
         precioUnidadUSD: precioUnidadUSD || 0,
         categoria: categoria || '',
       });
-    } else {
-      // Limpiar el formulario cuando el modal se cierra
-      setFormData({
-        codigo: '',
-        nombre: '',
-        descripcion: '',
-        ubicacionId: 0,
-        proveedor: '',
-        cantidad: 0,
-        cantidadMinima: 0,
-        precioUnidadCol: 0,
-        precioUnidadUSD: 0,
-        categoria: '',
-      });
     }
-  }, [isOpen, codigo, nombre, descripcion, ubicacion, proveedor, cantidad, cantidadMinima, precioUnidadCol, precioUnidadUSD, categoria]);
+  }, [isOpen, isUbicacionesLoaded, codigo, nombre, descripcion, ubicacion, proveedor, cantidad, cantidadMinima, precioUnidadCol, precioUnidadUSD, categoria, ubicaciones]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -153,7 +156,7 @@ const ModalEditar: React.FC<ModalEditarProps> = ({
 
   return (
     <Modal isOpen={isOpen} onRequestClose={onRequestClose} contentLabel="Editar Producto" className="modal-content">
-      <h2>Editar Producto</h2>
+      <h2>Modificar Producto</h2>
       <form onSubmit={handleSubmit}>
         <label>
           Código del Producto:
@@ -184,7 +187,7 @@ const ModalEditar: React.FC<ModalEditarProps> = ({
         </label>
         <label>
           Cantidad:
-          <input type="number" name="cantidad" value={formData.cantidad} onChange={handleChange} />
+          <input type="number" name="cantidad" value={formData.cantidad} onChange={handleChange} disabled={rol !== 'Admin'}/>
         </label>
         <label>
           Cantidad Mínima:
@@ -192,11 +195,11 @@ const ModalEditar: React.FC<ModalEditarProps> = ({
         </label>
         <label>
           Precio Unidad ₡:
-          <input type="number" name="precioUnidadCol" value={formData.precioUnidadCol} onChange={handleChange} />
+          <input type="number" name="precioUnidadCol" value={formData.precioUnidadCol} onChange={handleChange} disabled={rol !== 'Admin'}/>
         </label>
         <label>
           Precio Unidad $:
-          <input type="number" name="precioUnidadUSD" value={formData.precioUnidadUSD} onChange={handleChange} />
+          <input type="number" name="precioUnidadUSD" value={formData.precioUnidadUSD} onChange={handleChange} disabled={rol !== 'Admin'}/>
         </label>
         <label>
           Categoría:

@@ -5,6 +5,8 @@ import axios from 'axios';
 
 Modal.setAppElement('#root');
 
+const token = localStorage.getItem('token');
+
 interface ModalModificarUsuarioProps {
   isOpen: boolean;
   onRequestClose: () => void;
@@ -52,15 +54,16 @@ const ModalModificarUsuario: React.FC<ModalModificarUsuarioProps> = ({
     setError('');
   }, [isOpen, identificacion, nombre, email, rol]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
     const { name, value } = e.target;
-    // Validar solo letras y números
+
     if (name === 'contraseña' && !/^[a-zA-Z0-9]*$/.test(value)) {
       setError('La contraseña solo puede contener letras y números.');
       return;
     } else {
       setError('');
     }
+
     setFormData({
       ...formData,
       [name]: value
@@ -69,7 +72,11 @@ const ModalModificarUsuario: React.FC<ModalModificarUsuarioProps> = ({
 
   const verificarEmailExistente = async (email: string) => {
     try {
-      const response = await axios.get('http://localhost:3000/usuarios');
+      const response = await axios.get('http://localhost:3000/usuarios', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       const usuarios = response.data;
       return usuarios.some((usuario: any) => usuario.email === email && usuario.identificacion !== identificacion);
     } catch (error) {
@@ -137,12 +144,15 @@ const ModalModificarUsuario: React.FC<ModalModificarUsuarioProps> = ({
         </label>
         <label>
           Rol:
-          <input
-            type="text"
+          <select
             name="rol"
             value={formData.rol}
             onChange={handleChange}
-          />
+          >
+            <option value="">Seleccione un rol</option>
+            <option value="Admin">Admin</option>
+            <option value="Usuario">Usuario</option>
+          </select>
         </label>
         <label>
           Contraseña:
