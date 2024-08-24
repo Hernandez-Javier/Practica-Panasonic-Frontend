@@ -187,7 +187,7 @@ const ModalEditar: React.FC<ModalEditarProps> = ({
         </label>
         <label>
           Cantidad:
-          <input type="number" name="cantidad" value={formData.cantidad} onChange={handleChange} disabled={rol !== 'Admin'}/>
+          <input type="number" name="cantidad" value={formData.cantidad} onChange={handleChange} min="0" disabled={rol !== 'Admin'}/>
         </label>
         <label>
           Cantidad Mínima:

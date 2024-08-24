@@ -39,7 +39,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUploaded }) => {
       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
       const jsonData = XLSX.utils.sheet_to_json<any>(worksheet, { header: 1 });
 
-      const productos: Producto[] = jsonData.slice(0).map((row: any[], index: number) => {
+      const productos: Producto[] = jsonData.slice(1).map((row: any[], index: number) => {
         return {
           id: index + 1,
           codigo: row[1],
@@ -47,10 +47,10 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUploaded }) => {
           descripcion: row[3],
           ubicacion: row[5],
           proveedor: row[6],
-          cantidad: row[10],
-          cantidadMinima: row[7],
-          precioUnidadCol: 0,
-          precioUnidadUSD: row[11],
+          cantidad: row[7],
+          cantidadMinima: row[8],
+          precioUnidadCol: row[9],
+          precioUnidadUSD: row[10],
           categoria: row[4]
         };
       });

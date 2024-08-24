@@ -123,6 +123,31 @@ const Home: React.FC = () => {
     handlePageChange(1);
   };
 
+  const handlePagination = (total:number) => {
+    return(
+      <div className="pagination">
+        <button onClick={() => handlePageChange(1)} disabled={currentPage === 1}>
+          Inicio
+        </button>
+        <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}>
+          Anterior
+        </button>
+        {getPageNumbers(total).map((number) => (
+          <button
+            key={number}
+            onClick={() => handlePageChange(number)}
+            className={currentPage === number ? 'active' : ''}
+          >
+            {number}
+          </button>
+        ))}
+        <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages(total)}>
+          Siguiente
+        </button>
+      </div>
+    )
+  }
+
   //mostrar productos
   const fetchProductos = async () => {
     try {
@@ -520,8 +545,8 @@ const Home: React.FC = () => {
   };
 
   //abrir modal de edicion de departmento
-  const handleOpenEditarDepModal = (ubicacion: Data) => {
-    setDatoSeleccionado(ubicacion);
+  const handleOpenEditarDepModal = (departamento: Data) => {
+    setDatoSeleccionado(departamento);
     setIsEditDepartamentoModalOpen(true);
   };
 
@@ -1000,6 +1025,7 @@ const filteredBitacora = bitacora.filter(bit =>
     }
   };
 
+  //calcula el num de paginas
   const getPageNumbers = (num:number) => {
     const startPage = Math.max(1, currentPage - Math.floor(4 / 2));
     const endPage = Math.min(totalPages(num), startPage + 4 - 1);
@@ -1011,19 +1037,17 @@ const filteredBitacora = bitacora.filter(bit =>
     return pages;
   };
 
-  //constantes para controlar la paginación de los productos
-  const indexOfLastProduct = currentPage * productsPerPage;
-  const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
-  const currentProducts = filteredProductos.slice(indexOfFirstProduct, indexOfLastProduct);
-  //const totalPages = Math.ceil(filteredProductos.length / productsPerPage);
+  //
+  const calculatePagination = (items: any[]) => {
+    const indexOfLastItem = currentPage * productsPerPage;
+    const indexOfFirstItem = indexOfLastItem - productsPerPage;
+    const currentItems = items.slice(indexOfFirstItem, indexOfLastItem);
+    return currentItems;
+  };
+
   const totalPages = (num :number) => {
     return Math.ceil(num / productsPerPage);
   };
-
-  //constantes para controlar la paginación de la bitácora
-  const indexOfLastBitacora = currentPage * productsPerPage;
-  const indexOfFirstBitacora = indexOfLastBitacora - productsPerPage;
-  const currentBitacora = filteredBitacora.slice(indexOfFirstBitacora, indexOfLastBitacora);
 
   
   return (
@@ -1041,20 +1065,20 @@ const filteredBitacora = bitacora.filter(bit =>
         </div>
         <nav className="main-menu">
           <ul>
-            <li><Link to="#" className={activeCategory === 'productos' ? 'active' : ''} onClick={() => {fetchProductos(); setActiveCategory('productos'); }}>Productos</Link></li>
-            <li><Link to="#" className={activeCategory === 'entradas' ? 'active' : ''} onClick={() => {fetchEntradas(); setActiveCategory('entradas'); }}>Entradas de Inventario</Link></li>
-            <li><Link to="#" className={activeCategory === 'salidas' ? 'active' : ''} onClick={() => {fetchSalidas(); setActiveCategory('salidas'); }}>Salidas de Inventario</Link></li>
-            <li><Link to="#" className={activeCategory === 'salidasP' ? 'active' : ''} onClick={() => {fetchSalidasParticulares(); setActiveCategory('salidasP'); }}>Salidas Particulares</Link></li>
-            <li><Link to="#" className={activeCategory === 'devolucionees' ? 'active' : ''} onClick={() => {fetchDevoluciones(); setActiveCategory('devoluciones'); }}>Devoluciones</Link></li>
-            <li><Link to="#" className={activeCategory === 'ubicaciones' ? 'active' : ''} onClick={() => {fetchUbicaciones(); setActiveCategory('ubicaciones'); }}>Ubicaciones</Link></li>
-            <li><Link to="#" className={activeCategory === 'departamentos' ? 'active' : ''} onClick={() => {fetchDepartamentos(); setActiveCategory('departamentos'); }}>Departamentos</Link></li>
+            <li><Link to="#" className={activeCategory === 'productos' ? 'active' : ''} onClick={() => {fetchProductos(); setActiveCategory('productos'); setCurrentPage(1);}}>Productos</Link></li>
+            <li><Link to="#" className={activeCategory === 'entradas' ? 'active' : ''} onClick={() => {fetchEntradas(); setActiveCategory('entradas'); setCurrentPage(1);}}>Entradas de Inventario</Link></li>
+            <li><Link to="#" className={activeCategory === 'salidas' ? 'active' : ''} onClick={() => {fetchSalidas(); setActiveCategory('salidas'); setCurrentPage(1);}}>Salidas de Inventario</Link></li>
+            <li><Link to="#" className={activeCategory === 'salidasP' ? 'active' : ''} onClick={() => {fetchSalidasParticulares(); setActiveCategory('salidasP'); setCurrentPage(1);}}>Salidas Particulares</Link></li>
+            <li><Link to="#" className={activeCategory === 'devoluciones' ? 'active' : ''} onClick={() => {fetchDevoluciones(); setActiveCategory('devoluciones'); setCurrentPage(1);}}>Devoluciones</Link></li>
+            <li><Link to="#" className={activeCategory === 'ubicaciones' ? 'active' : ''} onClick={() => {fetchUbicaciones(); setActiveCategory('ubicaciones'); setCurrentPage(1);}}>Ubicaciones</Link></li>
+            <li><Link to="#" className={activeCategory === 'departamentos' ? 'active' : ''} onClick={() => {fetchDepartamentos(); setActiveCategory('departamentos'); setCurrentPage(1);}}>Departamentos</Link></li>
             {rol === 'Admin' && (
-              <li><Link to="#" className={activeCategory === 'usuarios' ? 'active' : ''} onClick={() => {fetchUsuarios(); setActiveCategory('usuarios'); }}>Usuarios</Link></li>
+              <li><Link to="#" className={activeCategory === 'usuarios' ? 'active' : ''} onClick={() => {fetchUsuarios(); setActiveCategory('usuarios'); setCurrentPage(1);}}>Usuarios</Link></li>
             )}
             {rol === 'Admin' && (
-              <li><Link to="#" className={activeCategory === 'emails' ? 'active' : ''} onClick={() => {fetchEmails(); setActiveCategory('emails'); }}>Email de Notificaciones</Link></li>
+              <li><Link to="#" className={activeCategory === 'emails' ? 'active' : ''} onClick={() => {fetchEmails(); setActiveCategory('emails'); setCurrentPage(1);}}>Email de Notificaciones</Link></li>
             )}
-            <li><Link to="#" className={activeCategory === 'bitacora' ? 'active' : ''} onClick={() => {fetchBitacora(); setActiveCategory('bitacora'); }}>Bitácora de Actividad</Link></li>
+            <li><Link to="#" className={activeCategory === 'bitacora' ? 'active' : ''} onClick={() => {fetchBitacora(); setActiveCategory('bitacora'); setCurrentPage(1);}}>Bitácora de Actividad</Link></li>
             <li><Link to="/reportes">Reportes</Link></li>
             <li><Link to="/upload">Cargar Datos</Link></li>
             <li><Export productos={productos} /></li>
@@ -1123,8 +1147,9 @@ const filteredBitacora = bitacora.filter(bit =>
         <div className="product-list"> 
           {showEntradas ? (
             filteredEntradas.length > 0 ? (
+              <>
               <div className="product-grid">
-                {filteredEntradas.map((entrada) => (
+                {calculatePagination(filteredEntradas).map((entrada) => (
                   <div key={entrada.id} className="product-item">
                     <div className="product-column">
                       <p><strong>Código:</strong> {entrada.codigoproducto}</p>
@@ -1138,13 +1163,16 @@ const filteredBitacora = bitacora.filter(bit =>
                   </div>
                 ))}
               </div>
+              {handlePagination(filteredEntradas.length)}
+              </>
             ) : (
               <p>No hay entradas disponibles.</p>
             )
           ) : showSalidas ? (
             filteredSalidas.length > 0 ? (
+              <>
               <div className="product-grid">
-                {filteredSalidas.map((salida) => (
+                {calculatePagination(filteredSalidas).map((salida) => (
                   <div key={salida.id} className="product-item">
                     <div className="product-column">
                       <p><strong>Código:</strong> {salida.codigoproducto}</p>
@@ -1159,13 +1187,16 @@ const filteredBitacora = bitacora.filter(bit =>
                   </div>
                 ))}
               </div>
+              {handlePagination(filteredSalidas.length)}
+              </>
             ) : (
               <p>No hay salidas disponibles.</p>
             )
           ) : showDevoluciones ? (
             filteredDevoluciones.length > 0 ? (
+              <>
               <div className="product-grid">
-                {filteredDevoluciones.map((devolucion) => (
+                {calculatePagination(filteredDevoluciones).map((devolucion) => (
                   <div key={devolucion.id} className="product-item">
                     <div className="product-column">
                       <p><strong>Código:</strong> {devolucion.codigoproducto}</p>
@@ -1179,13 +1210,16 @@ const filteredBitacora = bitacora.filter(bit =>
                   </div>
                 ))}
               </div>
+              {handlePagination(filteredDevoluciones.length)}
+              </>
             ) : (
               <p>No hay devoluciones disponibles.</p>
             )
           ) : showSalidasParticulares ? (
             filteredSalidasParticulares.length > 0 ? (
+              <>
               <div className="product-grid">
-                {filteredSalidasParticulares.map((salidaParticular) => (
+                {calculatePagination(filteredSalidasParticulares).map((salidaParticular) => (
                   <div key={salidaParticular.id} className="product-item">
                     <div className="product-column">
                       <p><strong>Código:</strong> {salidaParticular.codigoproducto}</p>
@@ -1199,13 +1233,16 @@ const filteredBitacora = bitacora.filter(bit =>
                   </div>
                 ))}
               </div>
+              {handlePagination(filteredSalidasParticulares.length)}
+              </>
             ) : (
               <p>No hay salidas particulares disponibles.</p>
             )
           ) : showBitacora ? (
             filteredBitacora.length > 0 ? (
+              <>
               <div className="product-grid">
-                {currentBitacora.map((registro) => (
+                {calculatePagination(filteredBitacora).map((registro) => (
                   <div key={registro.id} className="product-item">
                     <div className="product-column">
                       <p><strong>Usuario ID:</strong> {registro.usuarioid}</p>
@@ -1220,6 +1257,8 @@ const filteredBitacora = bitacora.filter(bit =>
                   </div>
                 ))}
               </div>
+              {handlePagination(filteredBitacora.length)}
+              </>
             ) : (
               <p>No hay salidas particulares disponibles.</p>
             )
@@ -1244,6 +1283,7 @@ const filteredBitacora = bitacora.filter(bit =>
                     </div>
                   ))}
                 </div>
+                {handlePagination(usuarios.length)}
               </>
             ) : (
               <p>No hay usuarios disponibles.</p>
@@ -1252,7 +1292,7 @@ const filteredBitacora = bitacora.filter(bit =>
               filteredUbicaciones.length > 0 ? (
                 <>
                   <div className="product-grid">
-                    {filteredUbicaciones.map((ubicacion) => (
+                    {calculatePagination(filteredUbicaciones).map((ubicacion) => (
                       <div key={ubicacion.id} className="product-item">
                         <div className="product-column">
                           <p><strong>ID:</strong> {ubicacion.id}</p>
@@ -1268,6 +1308,7 @@ const filteredBitacora = bitacora.filter(bit =>
                       </div>
                     ))}
                   </div>
+                  {handlePagination(filteredUbicaciones.length)}
                 </>
               ) : (
                 <p>No hay ubicaciones disponibles.</p>
@@ -1276,7 +1317,7 @@ const filteredBitacora = bitacora.filter(bit =>
               filteredDepartamentos.length > 0 ? (
                 <>
                   <div className="product-grid">
-                    {filteredDepartamentos.map((departamento) => (
+                    {calculatePagination(filteredDepartamentos).map((departamento) => (
                       <div key={departamento.id} className="product-item">
                         <div className="departamento-column">
                           <p><strong>ID:</strong> {departamento.id}</p>
@@ -1292,6 +1333,7 @@ const filteredBitacora = bitacora.filter(bit =>
                       </div>
                     ))}
                   </div>
+                  {handlePagination(filteredDepartamentos.length)}
                 </>
               ) : (
                 <p>No hay departamentos disponibles.</p>
@@ -1313,6 +1355,7 @@ const filteredBitacora = bitacora.filter(bit =>
                       </div>
                     ))}
                   </div>
+                  {handlePagination(emails.length)}
                 </>
               ) : (
                 <p>No hay ubicaciones disponibles.</p>
@@ -1330,7 +1373,7 @@ const filteredBitacora = bitacora.filter(bit =>
                 </div>
 
                 <div className="product-grid">
-                  {currentProducts.map((producto) => (
+                  {calculatePagination(filteredProductos).map((producto) => (
                     <div key={producto.id} className="product-item">
                       <div className="product-column">
                         <p><strong>Código:</strong> {producto.codigo}</p>
@@ -1359,41 +1402,20 @@ const filteredBitacora = bitacora.filter(bit =>
                     </div>
                   ))}
                 </div>
-                  
+                {handlePagination(filteredProductos.length)}
               </>
             ) : (
+              <>
+              <div className="Product-header">
+                <div className="contenedor-botones">
+                  <button className="add-product-button" onClick={() => setIsProductoModalOpen(true)}>Agregar Producto Nuevo</button>
+                </div>
+              </div>
               <p>No hay productos disponibles.</p>
+            </>
             )
           )}
-          <div className="pagination">
-            <button
-              onClick={() => handlePageChange(1)}
-              disabled={currentPage === 1}
-            >
-              Inicio
-            </button>
-            <button
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-            >
-              Anterior
-            </button>
-            {getPageNumbers(filteredProductos.length).map((number) => (
-              <button
-                key={number}
-                onClick={() => handlePageChange(number)}
-                className={currentPage === number ? 'active' : ''}
-              >
-                {number}
-              </button>
-            ))}
-            <button
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages(filteredProductos.length)}
-            >
-              Siguiente
-            </button>
-          </div>
+          
         </div>
 
       </main>
