@@ -70,7 +70,7 @@ const ModalEditar: React.FC<ModalEditarProps> = ({
 
   const fetchUbicaciones = async () => {
     try {
-      const response = await api.get('http://localhost:3000/ubicaciones/all', {
+      const response = await api.get('/ubicaciones/all', {
         headers: {
           Authorization: `Bearer ${token}`,
         },

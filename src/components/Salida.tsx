@@ -47,7 +47,7 @@ const ModalSalida: React.FC<ModalSalidaProps> = ({ isOpen, onRequestClose, onSub
 
   const fetchDepartamentos = async () => {
     try {
-      const response = await api.get('http://localhost:3000/departamentos/all', {
+      const response = await api.get('/departamentos/all', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
