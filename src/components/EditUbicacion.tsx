@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Modal from 'react-modal';
 import '../styles/modalES.css';
 import axios from 'axios';
+import api from '../api';
 
 Modal.setAppElement('#root');
 
@@ -62,7 +63,7 @@ const ModalModificarEntidad: React.FC<ModalModificarEntidadProps> = ({
   const verificarDataExistente = async (nombre: string) => {
     try {
       const endpoint = entidad === 'Ubicacion' ? 'ubicaciones' : 'departamentos';
-      const response = await axios.get(`http://localhost:3000/${endpoint}/all`, {
+      const response = await api.get(`/${endpoint}/all`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

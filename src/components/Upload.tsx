@@ -3,6 +3,7 @@ import { useDropzone } from 'react-dropzone';
 import { Link, useNavigate } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import axios from 'axios';
+import api from '../api';
 import '../styles/upload.css';
 
 interface Producto {
@@ -58,7 +59,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUploaded }) => {
       setIsLoading(true); // Inicia la carga
 
       try {
-        const response = await axios.post('http://localhost:3000/productos/upload', productos, {
+        const response = await api.post('/productos/upload', productos, {
           headers: {
             Authorization: `Bearer ${token}`
           }

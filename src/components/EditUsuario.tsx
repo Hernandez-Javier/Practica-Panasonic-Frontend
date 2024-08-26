@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Modal from 'react-modal';
 import '../styles/modalES.css';
 import axios from 'axios';
+import api from '../api';
 
 Modal.setAppElement('#root');
 
@@ -72,7 +73,7 @@ const ModalModificarUsuario: React.FC<ModalModificarUsuarioProps> = ({
 
   const verificarEmailExistente = async (email: string) => {
     try {
-      const response = await axios.get('http://localhost:3000/usuarios', {
+      const response = await api.get('/usuarios', {
         headers: {
           Authorization: `Bearer ${token}`,
         },

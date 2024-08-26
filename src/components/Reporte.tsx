@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { Bar } from 'react-chartjs-2';
 import { Chart, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import axios from 'axios';
+import api from '../api';
 import '../styles/home.css';
 import '../styles/report.css';
 import PanasonicLogo from '../images/logo-Panasonic.png';
@@ -136,7 +137,7 @@ const Home: React.FC = () => {
   //mostrar productos
   const fetchProductos = async () => {
     try {
-      const response = await axios.get('http://localhost:3000/productos/all', {
+      const response = await api.get('http://localhost:3000/productos/all', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -154,7 +155,7 @@ const Home: React.FC = () => {
   //mostrar entradas
   const fetchEntradas = async () => {
     try {
-      const response = await axios.get('http://localhost:3000/entradas/all', {
+      const response = await api.get('http://localhost:3000/entradas/all', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -171,7 +172,7 @@ const Home: React.FC = () => {
   //mostrar salidas
   const fetchSalidas = async () => {
     try {
-      const response = await axios.get('http://localhost:3000/salidas/all', {
+      const response = await api.get('http://localhost:3000/salidas/all', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -188,7 +189,7 @@ const Home: React.FC = () => {
   //mostrar ubicaciones
   const fetchUbicaciones = async () => {
     try {
-      const response = await axios.get('http://localhost:3000/ubicaciones/all', {
+      const response = await api.get('http://localhost:3000/ubicaciones/all', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -202,7 +203,7 @@ const Home: React.FC = () => {
   //mostrar departamentos
   const fetchDepartamentos = async () => {
     try {
-      const response = await axios.get('http://localhost:3000/departamentos/all', {
+      const response = await api.get('http://localhost:3000/departamentos/all', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -216,7 +217,7 @@ const Home: React.FC = () => {
   //mostrar productos en cantidad minima
   const cantidadMinima = async () => {
     try {
-      const response = await axios.get('http://localhost:3000/productos/cantidad-minima', {
+      const response = await api.get('http://localhost:3000/productos/cantidad-minima', {
         headers: {
           Authorization: `Bearer ${token}`,
         },

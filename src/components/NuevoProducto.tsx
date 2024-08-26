@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Modal from 'react-modal';
 import axios from 'axios';
+import api from '../api';
 import '../styles/modalES.css';
 
 const token = localStorage.getItem('token');
@@ -60,7 +61,7 @@ const ModalProducto: React.FC<ModalProductoProps> = ({ isOpen, onRequestClose, o
 
   const fetchUbicaciones = async () => {
     try {
-      const response = await axios.get('/ubicaciones/all', {
+      const response = await api.get('/ubicaciones/all', {
         headers: {
           Authorization: `Bearer ${token}`,
         },

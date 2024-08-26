@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {jwtDecode} from 'jwt-decode';
 import Modal from 'react-modal';
 import axios from 'axios';
+import api from '../api';
 import '../styles/modalES.css';
 
 Modal.setAppElement('#root');
@@ -69,7 +70,7 @@ const ModalEditar: React.FC<ModalEditarProps> = ({
 
   const fetchUbicaciones = async () => {
     try {
-      const response = await axios.get('http://localhost:3000/ubicaciones/all', {
+      const response = await api.get('http://localhost:3000/ubicaciones/all', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
