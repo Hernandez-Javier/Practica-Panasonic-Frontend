@@ -137,7 +137,7 @@ const Home: React.FC = () => {
   //mostrar productos
   const fetchProductos = async () => {
     try {
-      const response = await api.get('http://localhost:3000/productos/all', {
+      const response = await api.get('/productos/all', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -155,7 +155,7 @@ const Home: React.FC = () => {
   //mostrar entradas
   const fetchEntradas = async () => {
     try {
-      const response = await api.get('http://localhost:3000/entradas/all', {
+      const response = await api.get('/entradas/all', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -172,7 +172,7 @@ const Home: React.FC = () => {
   //mostrar salidas
   const fetchSalidas = async () => {
     try {
-      const response = await api.get('http://localhost:3000/salidas/all', {
+      const response = await api.get('/salidas/all', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -189,7 +189,7 @@ const Home: React.FC = () => {
   //mostrar ubicaciones
   const fetchUbicaciones = async () => {
     try {
-      const response = await api.get('http://localhost:3000/ubicaciones/all', {
+      const response = await api.get('/ubicaciones/all', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -203,7 +203,7 @@ const Home: React.FC = () => {
   //mostrar departamentos
   const fetchDepartamentos = async () => {
     try {
-      const response = await api.get('http://localhost:3000/departamentos/all', {
+      const response = await api.get('/departamentos/all', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -217,7 +217,7 @@ const Home: React.FC = () => {
   //mostrar productos en cantidad minima
   const cantidadMinima = async () => {
     try {
-      const response = await api.get('http://localhost:3000/productos/cantidad-minima', {
+      const response = await api.get('/productos/cantidad-minima', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
