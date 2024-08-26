@@ -4,6 +4,7 @@ import {jwtDecode} from 'jwt-decode';
 import { format } from 'date-fns';
 import { toast } from 'react-toastify';
 import axios from 'axios';
+import api from '../api';
 import '../styles/home.css';
 import PanasonicLogo from '../images/logo-Panasonic.png';
 import ModalEntrada from './Entrada';
@@ -151,7 +152,7 @@ const Home: React.FC = () => {
   //mostrar productos
   const fetchProductos = async () => {
     try {
-      const response = await axios.get('/productos/all', {
+      const response = await api.get('/productos/all', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -175,7 +176,7 @@ const Home: React.FC = () => {
   //mostrar usuarios
   const fetchUsuarios = async () => {
     try {
-      const response = await axios.get('/usuarios', {
+      const response = await api.get('/usuarios', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -199,7 +200,7 @@ const Home: React.FC = () => {
   //mostrar entradas
   const fetchEntradas = async () => {
     try {
-      const response = await axios.get('/entradas/all', {
+      const response = await api.get('/entradas/all', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -223,7 +224,7 @@ const Home: React.FC = () => {
   //mostrar salidas
   const fetchSalidas = async () => {
     try {
-      const response = await axios.get('/salidas/all', {
+      const response = await api.get('/salidas/all', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -247,7 +248,7 @@ const Home: React.FC = () => {
   //mostrar devoluciones
   const fetchDevoluciones = async () => {
     try {
-      const response = await axios.get('/devoluciones/all', {
+      const response = await api.get('/devoluciones/all', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -271,7 +272,7 @@ const Home: React.FC = () => {
   //mostrar salidas particulares
   const fetchSalidasParticulares = async () => {
     try {
-      const response = await axios.get('/salidas-particulares/all', {
+      const response = await api.get('/salidas-particulares/all', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -295,7 +296,7 @@ const Home: React.FC = () => {
   //mostrar ubicaciones
   const fetchUbicaciones = async () => {
     try {
-      const response = await axios.get('/ubicaciones/all', {
+      const response = await api.get('/ubicaciones/all', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -319,7 +320,7 @@ const Home: React.FC = () => {
   //mostrar departamentos
   const fetchDepartamentos = async () => {
     try {
-      const response = await axios.get('/departamentos/all', {
+      const response = await api.get('/departamentos/all', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -343,7 +344,7 @@ const Home: React.FC = () => {
   //mostrar bitacora
   const fetchBitacora = async () => {
     try {
-      const response = await axios.get('/bitacora/all', {
+      const response = await api.get('/bitacora/all', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -367,7 +368,7 @@ const Home: React.FC = () => {
   //mostrar emails
   const fetchEmails = async () => {
     try {
-      const response = await axios.get('/notif/all', {
+      const response = await api.get('/notif/all', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -399,7 +400,7 @@ const Home: React.FC = () => {
 
     if (confirmarEliminar) {
       try {
-        await axios.delete(`/productos/eliminar/${codigo}`, {
+        await api.delete(`/productos/eliminar/${codigo}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
   
@@ -423,7 +424,7 @@ const Home: React.FC = () => {
 
     if (confirmarEliminar) {
       try {
-        await axios.delete(`/ubicaciones/eliminar/${nombre}`, {
+        await api.delete(`/ubicaciones/eliminar/${nombre}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
   
@@ -448,7 +449,7 @@ const Home: React.FC = () => {
 
     if (confirmarEliminar) {
       try {
-        await axios.delete(`/departamentos/eliminar/${nombre}`, {
+        await api.delete(`/departamentos/eliminar/${nombre}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
   
@@ -472,7 +473,7 @@ const Home: React.FC = () => {
 
     if (confirmarEliminar) {
       try {
-        await axios.delete(`/usuarios/eliminar/${id}`, {
+        await api.delete(`/usuarios/eliminar/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
   
@@ -497,7 +498,7 @@ const Home: React.FC = () => {
 
     if (confirmarEliminar) {
       try {
-        await axios.delete(`/notif/eliminar/${id}`, {
+        await api.delete(`/notif/eliminar/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
   
@@ -564,7 +565,7 @@ const Home: React.FC = () => {
     categoria: string
   ) => {
     try {
-      const response = await axios.put(
+      const response = await api.put(
         `/productos/modify/${codigo}`,
         {
           nombre,
@@ -602,7 +603,7 @@ const Home: React.FC = () => {
     contraseña: string
   ) => {
     try {
-      const response = await axios.put(
+      const response = await api.put(
         `/usuarios/modify/${identificacion}`,
         {
           identificacion,
@@ -633,7 +634,7 @@ const Home: React.FC = () => {
     descripcion: string
   ) => {
     try {
-      const response = await axios.put(
+      const response = await api.put(
         `/ubicaciones/modificar/${id}`,
         {
           nombre,
@@ -661,7 +662,7 @@ const Home: React.FC = () => {
     descripcion: string
   ) => {
     try {
-      const response = await axios.put(
+      const response = await api.put(
         `/departamentos/modify/${id}`,
         {
           nombre,
@@ -685,7 +686,7 @@ const Home: React.FC = () => {
   //entrada de un producto
   const handleEntrada = async (codigoProducto: string, cantidad: number, ordenCompra: string) => {
     try {
-      const response = await axios.post('/productos/entrada', {
+      const response = await api.post('/productos/entrada', {
         codigoProducto,
         cantidad,
         ordenCompra
@@ -710,7 +711,7 @@ const Home: React.FC = () => {
   //salida de un producto
   const handleSalida = async (codigoProducto: string, cantidad: number, destino:string, solicitante:string) => {
     try {
-      const response = await axios.post('/productos/salida', {
+      const response = await api.post('/productos/salida', {
         codigoProducto,
         cantidad,
         destino,
@@ -744,7 +745,7 @@ const Home: React.FC = () => {
       motivo: string
   ) => {
     try {
-      const response = await axios.post('/productos/devolucion', {
+      const response = await api.post('/productos/devolucion', {
         codigoProducto, 
         cantidad,
         motivo
@@ -772,7 +773,7 @@ const Home: React.FC = () => {
     motivo: string
   ) => {
     try {
-      const response = await axios.post('/productos/salida-particular', {
+      const response = await api.post('/productos/salida-particular', {
         codigoProducto, 
         cantidad,
         motivo
@@ -812,7 +813,7 @@ const Home: React.FC = () => {
     categoria:string
     ) => {
     try {
-      const response = await axios.post('/productos', {
+      const response = await api.post('/productos', {
         codigo, 
         nombre, 
         descripcion, 
@@ -846,7 +847,7 @@ const Home: React.FC = () => {
     descripcion:string
     ) => {
     try {
-      const response = await axios.post('/ubicaciones', {
+      const response = await api.post('/ubicaciones', {
         nombre, 
         descripcion
       }, {
@@ -868,7 +869,7 @@ const Home: React.FC = () => {
     descripcion:string
     ) => {
     try {
-      const response = await axios.post('/departamentos', {
+      const response = await api.post('/departamentos', {
         nombre, 
         descripcion
       }, {
@@ -893,7 +894,7 @@ const Home: React.FC = () => {
     contraseña: string
   ) => {
     try {
-      const response = await axios.post('/usuarios', {
+      const response = await api.post('/usuarios', {
         identificacion, 
         nombre, 
         email, 
@@ -919,7 +920,7 @@ const Home: React.FC = () => {
   //agregar email de notificaciones
   const handleEmailNuevo = async (email:string) => {
     try {
-      const response = await axios.post('/notif', {
+      const response = await api.post('/notif', {
         email
       }, {
         headers: {
@@ -946,7 +947,7 @@ const Home: React.FC = () => {
   //mostrar productos en cantidad minima
   const cantidadMinima = async () => {
     try {
-      const response = await axios.get('/productos/cantidad-minima', {
+      const response = await api.get('/productos/cantidad-minima', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
