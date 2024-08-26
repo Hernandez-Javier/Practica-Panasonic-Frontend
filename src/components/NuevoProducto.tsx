@@ -60,7 +60,7 @@ const ModalProducto: React.FC<ModalProductoProps> = ({ isOpen, onRequestClose, o
 
   const fetchUbicaciones = async () => {
     try {
-      const response = await axios.get('http://localhost:3000/ubicaciones/all', {
+      const response = await axios.get('/ubicaciones/all', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
