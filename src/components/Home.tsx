@@ -405,12 +405,13 @@ const Home: React.FC = () => {
         });
   
         setProductos(productos.filter(producto => producto.codigo !== codigo));
+        toast.success('Producto eliminado');
       } catch (error) {
         console.error('Error eliminando el producto', error);
         setError('Error al eliminar el producto');
+        toast.error('Error eliminando el producto');
       }
     }
-    toast.success('Producto eliminado');
   };
 
   //eliminar ubicacion
@@ -454,12 +455,13 @@ const Home: React.FC = () => {
         });
   
         setDepartamentos(departamentos.filter(departamento => departamento.nombre !== nombre));
+        toast.success('Departamento eliminado');
       } catch (error) {
         console.error('Error eliminando el producto', error);
         setError('Error al eliminar el producto');
+        toast.error('Error eliminando el departamento');
       }
     }
-    toast.success('Departamento eliminado');
   };
 
   //eliminar usuario
@@ -503,12 +505,13 @@ const Home: React.FC = () => {
         });
   
         setEmails(emails.filter(email => email.id !== id));
+        toast.success('Email eliminado');
       } catch (error) {
         console.error('Error eliminando el email', error);
         setError('Error al eliminar el email');
+        toast.error('Error eliminando el email');
       }
     }
-    toast.success('Email eliminado');
   };
 
   //abrir modal de entrada
@@ -584,7 +587,7 @@ const Home: React.FC = () => {
           },
         }
       );
-      console.log(response.data);
+      
       fetchProductos();
       toast.success('Producto modificado con éxito!');
       setIsEditarProductoModalOpen(false);
@@ -646,7 +649,7 @@ const Home: React.FC = () => {
           },
         }
       );
-      console.log(response.data);
+      
       fetchUbicaciones(); // Asume que esta función recarga las ubicaciones desde la base de datos
       setIsEditUbicacionModalOpen(false); // Cierra el modal de edición
     } catch (error) {
@@ -674,7 +677,7 @@ const Home: React.FC = () => {
           },
         }
       );
-      console.log(response.data);
+      
       fetchDepartamentos();
       setIsEditDepartamentoModalOpen(false);
     } catch (error) {
@@ -695,7 +698,7 @@ const Home: React.FC = () => {
           Authorization: `Bearer ${token}`,
         },
       });
-      console.log(response.data);
+      
       fetchProductos();
     } catch (error) {
       console.error('Error al realizar la entrada:', error);
@@ -721,7 +724,7 @@ const Home: React.FC = () => {
           Authorization: `Bearer ${token}`,
         },
       });
-      console.log(response.data);
+      
       fetchProductos();
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 404) {
@@ -877,7 +880,7 @@ const Home: React.FC = () => {
           Authorization: `Bearer ${token}`,
         },
       });
-      console.log(response.data);
+      
       toast.success('Departamento agregado con éxito!');
       fetchDepartamentos();
     } catch (error) {

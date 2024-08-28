@@ -501,7 +501,6 @@ const Home: React.FC = () => {
     
     const sortedUbicaciones = Object.entries(ubicacionCount).sort((a, b) => b[1] - a[1]);
     const topUbicaciones = sortedUbicaciones.slice(0, 8);
-    console.log(topUbicaciones);
     return {
       topUbicaciones: topUbicaciones.map(item => item[0]),
       cantidadesU: topUbicaciones.map(item => item[1])
