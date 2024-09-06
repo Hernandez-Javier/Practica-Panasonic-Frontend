@@ -1256,7 +1256,7 @@ const filteredBitacora = bitacora.filter(bit =>
                     <div className="product-column">
                       <p><strong>Tipo de Actividad:</strong> {registro.tipoactividad}</p>
                       <p><strong>Actividad ID:</strong> {registro.actividadid}</p>
-                      <p><strong>Fecha y Hora:</strong> {formatDate(registro.fechahora)}</p>
+                      <p><strong>Fecha:</strong> {formatDate(registro.fechahora)}</p>
                     </div>
                   </div>
                 ))}
